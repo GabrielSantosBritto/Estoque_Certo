@@ -1,7 +1,10 @@
+
 package br.com.estoquecerto.controller;
 
 import br.com.estoquecerto.dto.request.ProdutoRequestDTO;
 import br.com.estoquecerto.dto.response.ProdutoResponseDTO;
+import br.com.estoquecerto.dto.request.FornecedorRequestDTO;
+import br.com.estoquecerto.dto.response.FornecedorResponseDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
@@ -16,11 +19,13 @@ public class FrontController {
 
     private final StatusController statusController;
     private final ProdutoController produtoController;
+    private final FornecedorController fornecedorController;
     private final ObjectMapper objectMapper;
 
     public FrontController() {
         this.statusController = new StatusController();
         this.produtoController = new ProdutoController();
+        this.fornecedorController = new FornecedorController();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -32,6 +37,7 @@ public class FrontController {
 
         try {
 
+            // Status da API
             if (metodo.equals("GET") &&
                     caminho.equals("/api/status")) {
 
@@ -39,6 +45,7 @@ public class FrontController {
                 return;
             }
 
+            // Rotas de produtos
             if (metodo.equals("POST") &&
                     caminho.equals("/api/produtos")) {
 
@@ -66,7 +73,9 @@ public class FrontController {
 
             if (caminho.startsWith("/api/produtos/")) {
 
-                String idTexto = caminho.substring("/api/produtos/".length());
+                String idTexto = caminho.substring(
+                    "/api/produtos/".length()
+                );
 
                 if (metodo.equals("GET")) {
                     buscarProdutoPorId(exchange, idTexto);
@@ -84,6 +93,57 @@ public class FrontController {
                 }
             }
 
+            // Rotas de fornecedores
+            if (metodo.equals("POST") &&
+                    caminho.equals("/api/fornecedores")) {
+
+                cadastrarFornecedor(exchange);
+                return;
+            }
+
+            if (metodo.equals("GET") &&
+                    caminho.equals("/api/fornecedores")) {
+
+                listarFornecedores(exchange);
+                return;
+            }
+
+            // Buscar fornecedor pelo CNPJ
+            if (metodo.equals("GET") &&
+                    caminho.startsWith("/api/fornecedores/cnpj/")) {
+
+                String cnpj = caminho.substring(
+                    "/api/fornecedores/cnpj/".length()
+                );
+
+                buscarFornecedorPorCnpj(exchange, cnpj);
+                return;
+            }
+
+            // Buscar, atualizar ou desativar fornecedor pelo ID
+            if (caminho.startsWith("/api/fornecedores/")) {
+
+                String idTexto = caminho.substring(
+                    "/api/fornecedores/".length()
+                );
+
+                if (metodo.equals("GET")) {
+                    buscarFornecedorPorId(exchange, idTexto);
+                    return;
+                }
+
+                if (metodo.equals("PUT")) {
+                    atualizarFornecedor(exchange, idTexto);
+                    return;
+                }
+
+                if (metodo.equals("DELETE")) {
+                    desativarFornecedor(exchange, idTexto);
+                    return;
+                }
+            }
+
+            // Rota não encontrada
             enviarJson(exchange, 404, Map.of(
                 "erro", "Rota não encontrada"
             ));
@@ -96,17 +156,25 @@ public class FrontController {
 
         } catch (SQLException e) {
 
-            enviarJson(exchange, 500, Map.of(
-                "erro", "Erro ao acessar o banco de dados."
-            ));
+    e.printStackTrace();
+
+    enviarJson(exchange, 500, Map.of(
+        "erro", "Erro ao acessar o banco de dados."
+    ));
 
         } catch (Exception e) {
 
-            enviarJson(exchange, 500, Map.of(
-                "erro", "Erro interno do servidor."
-            ));
-        }
+    e.printStackTrace();
+
+    enviarJson(exchange, 500, Map.of(
+        "erro", "Erro interno do servidor."
+    ));
+}
     }
+
+    // =========================
+    // MÉTODOS DE PRODUTOS
+    // =========================
 
     private void cadastrarProduto(HttpExchange exchange)
             throws IOException, SQLException {
@@ -137,13 +205,7 @@ public class FrontController {
             HttpExchange exchange,
             String idTexto) throws IOException, SQLException {
 
-        Long id;
-
-        try {
-            id = Long.parseLong(idTexto);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID inválido.");
-        }
+        Long id = converterId(idTexto);
 
         Optional<ProdutoResponseDTO> produto =
             produtoController.buscarPorId(id);
@@ -173,6 +235,133 @@ public class FrontController {
         }
     }
 
+    private void atualizarProduto(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        ProdutoRequestDTO dto = objectMapper.readValue(
+            exchange.getRequestBody(),
+            ProdutoRequestDTO.class
+        );
+
+        produtoController.atualizar(id, dto);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Produto atualizado com sucesso."
+        ));
+    }
+
+    private void desativarProduto(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        produtoController.desativar(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Produto desativado com sucesso."
+        ));
+    }
+
+    // =========================
+    // MÉTODOS DE FORNECEDORES
+    // =========================
+
+    private void cadastrarFornecedor(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        FornecedorRequestDTO dto = objectMapper.readValue(
+            exchange.getRequestBody(),
+            FornecedorRequestDTO.class
+        );
+
+        Long id = fornecedorController.cadastrar(dto);
+
+        enviarJson(exchange, 201, Map.of(
+            "id", id,
+            "mensagem", "Fornecedor cadastrado com sucesso."
+        ));
+    }
+
+    private void listarFornecedores(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        List<FornecedorResponseDTO> fornecedores =
+            fornecedorController.listarTodos();
+
+        enviarJson(exchange, 200, fornecedores);
+    }
+
+    private void buscarFornecedorPorId(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        Optional<FornecedorResponseDTO> fornecedor =
+            fornecedorController.buscarPorId(id);
+
+        if (fornecedor.isPresent()) {
+            enviarJson(exchange, 200, fornecedor.get());
+        } else {
+            enviarJson(exchange, 404, Map.of(
+                "erro", "Fornecedor não encontrado."
+            ));
+        }
+    }
+
+    private void buscarFornecedorPorCnpj(
+            HttpExchange exchange,
+            String cnpj) throws IOException, SQLException {
+
+        Optional<FornecedorResponseDTO> fornecedor =
+            fornecedorController.buscarPorCnpj(cnpj);
+
+        if (fornecedor.isPresent()) {
+            enviarJson(exchange, 200, fornecedor.get());
+        } else {
+            enviarJson(exchange, 404, Map.of(
+                "erro", "Fornecedor não encontrado."
+            ));
+        }
+    }
+
+    private void atualizarFornecedor(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        FornecedorRequestDTO dto = objectMapper.readValue(
+            exchange.getRequestBody(),
+            FornecedorRequestDTO.class
+        );
+
+        fornecedorController.atualizar(id, dto);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Fornecedor atualizado com sucesso."
+        ));
+    }
+
+    private void desativarFornecedor(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        fornecedorController.desativar(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Fornecedor desativado com sucesso."
+        ));
+    }
+
+    // =========================
+    // MÉTODO DE RESPOSTA JSON
+    // =========================
+
     private void enviarJson(
             HttpExchange exchange,
             int status,
@@ -190,35 +379,6 @@ public class FrontController {
         try (var corpo = exchange.getResponseBody()) {
             corpo.write(resposta);
         }
-    }
-
-    // Atualizar produto
-    private void atualizarProduto(HttpExchange exchange, String idTexto)
-            throws IOException, SQLException {
-
-        Long id = converterId(idTexto);
-
-        ProdutoRequestDTO dto = objectMapper.readValue(
-            exchange.getRequestBody(),
-            ProdutoRequestDTO.class
-        );
-
-        produtoController.atualizar(id, dto);
-
-        enviarJson(exchange, 200,
-            Map.of("mensagem", "Produto atualizado com sucesso."));
-    }
-
-    // Desativar produto
-    private void desativarProduto(HttpExchange exchange, String idTexto)
-            throws IOException, SQLException {
-
-        Long id = converterId(idTexto);
-
-        produtoController.desativar(id);
-
-        enviarJson(exchange, 200,
-            Map.of("mensagem", "Produto desativado com sucesso."));
     }
 
     // Converter ID recebido pela URL
