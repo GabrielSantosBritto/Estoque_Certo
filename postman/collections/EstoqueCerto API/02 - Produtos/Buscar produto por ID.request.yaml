@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/produtos/{{produtoId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Código gerado no formato PROD-0000", function () {
+          const p = pm.response.json();
+          pm.expect(p.codigo).to.match(/^PROD-\d{4,}$/);
+          pm.collectionVariables.set("produtoCodigo", p.codigo);
+      });
+
+      pm.test("Estoque inicial zero e produto ativo", function () {
+          const p = pm.response.json();
+          pm.expect(Number(p.quantidadeEstoque)).to.eql(0);
+          pm.expect(p.ativo).to.eql(true);
+      });
+    language: text/javascript
+order: 2000

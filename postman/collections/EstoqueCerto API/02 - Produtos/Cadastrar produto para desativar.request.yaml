@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{baseUrl}}/api/produtos"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nome": "Produto Descontinuado",
+      "descricao": "Criado pela coleção de testes",
+      "unidadeMedida": "UN",
+      "precoVenda": 29.9,
+      "quantidadeMinima": 10
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.collectionVariables.set("produtoInativoId", pm.response.json().id);
+    language: text/javascript
+order: 13000

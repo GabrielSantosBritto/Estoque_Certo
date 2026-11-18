@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fornecedores/{{fornecedorInativoId}}"
+method: DELETE
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 409", function () {
+          pm.response.to.have.status(409);
+      });
+
+      pm.test("Resposta tem mensagem de erro", function () {
+          pm.expect(pm.response.json()).to.have.property("erro");
+      });
+    language: text/javascript
+order: 15000

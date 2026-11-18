@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/produtos/{{produtoId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nome": "Arroz 5kg Tipo 1",
+      "descricao": "Atualizado pela coleção",
+      "unidadeMedida": "UN",
+      "precoVenda": 31.5,
+      "quantidadeMinima": 12
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", function () {
+          pm.response.to.have.status(200);
+      });
+    language: text/javascript
+order: 10000

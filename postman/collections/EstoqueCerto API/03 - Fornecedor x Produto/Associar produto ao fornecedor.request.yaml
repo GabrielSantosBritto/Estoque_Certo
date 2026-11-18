@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fornecedores-produtos"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fornecedorId": {{fornecedorId}},
+      "produtoId": {{produtoId}}
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.collectionVariables.set("associacaoId", pm.response.json().id);
+    language: text/javascript
+order: 1000

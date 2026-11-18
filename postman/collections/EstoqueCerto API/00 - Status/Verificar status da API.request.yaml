@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/api/status"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("API online", function () {
+          pm.expect(pm.response.json().status).to.eql("online");
+      });
+    language: text/javascript
+order: 1000

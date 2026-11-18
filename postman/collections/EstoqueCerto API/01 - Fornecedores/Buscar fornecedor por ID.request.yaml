@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fornecedores/{{fornecedorId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Dados conferem", function () {
+          const f = pm.response.json();
+          pm.expect(f.cnpj).to.eql(pm.collectionVariables.get("cnpj"));
+          pm.expect(f.ativo).to.eql(true);
+      });
+    language: text/javascript
+order: 6000

@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fornecedores"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "cnpj": "{{cnpjNovo}}"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      // Gera um CNPJ aleatório (14 dígitos) para a coleção poder rodar várias vezes
+      function cnpjAleatorio() {
+          let s = "";
+          for (let i = 0; i < 14; i++) s += Math.floor(Math.random() * 10);
+          return s;
+      }
+      pm.collectionVariables.set("cnpjNovo", cnpjAleatorio());
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status 400", function () {
+          pm.response.to.have.status(400);
+      });
+
+      pm.test("Resposta tem mensagem de erro", function () {
+          pm.expect(pm.response.json()).to.have.property("erro");
+      });
+    language: text/javascript
+order: 3000

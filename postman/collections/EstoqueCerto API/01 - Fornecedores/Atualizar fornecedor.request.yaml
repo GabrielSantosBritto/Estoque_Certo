@@ -1,0 +1,32 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fornecedores/{{fornecedorId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "cnpj": "{{cnpj}}",
+      "razaoSocial": "Fornecedor Teste Atualizado LTDA",
+      "nomeFantasia": "Fornecedor Teste",
+      "inscricaoEstadual": "123456789",
+      "telefone": "(11) 99999-0000",
+      "email": "contato@fornecedorteste.com.br",
+      "cep": "01001-000",
+      "logradouro": "Praça da Sé",
+      "numero": "100",
+      "complemento": "Sala 1",
+      "bairro": "Sé",
+      "municipio": "São Paulo",
+      "uf": "SP",
+      "observacoes": "Criado pela coleção de testes"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", function () {
+          pm.response.to.have.status(200);
+      });
+    language: text/javascript
+order: 10000

@@ -1,0 +1,16 @@
+$kind: collection
+description: |-
+  Coleção de testes da API EstoqueCerto.
+
+  Rodar com o servidor ligado em http://localhost:8080, pelo Collection Runner, na ordem das pastas. Cada execução cria os próprios dados (CNPJ aleatório), então a coleção pode ser executada várias vezes no mesmo banco.
+variables:
+  baseUrl: http://localhost:8080
+  cnpj: ""
+  cnpjNovo: ""
+  cnpjInativo: ""
+  fornecedorId: ""
+  fornecedorInativoId: ""
+  produtoId: ""
+  produtoCodigo: ""
+  produtoInativoId: ""
+  associacaoId: ""

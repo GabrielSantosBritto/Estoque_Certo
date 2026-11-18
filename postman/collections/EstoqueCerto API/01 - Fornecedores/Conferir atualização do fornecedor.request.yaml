@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fornecedores/{{fornecedorId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Razão social foi atualizada", function () {
+          pm.expect(pm.response.json().razaoSocial).to.eql("Fornecedor Teste Atualizado LTDA");
+      });
+    language: text/javascript
+order: 11000

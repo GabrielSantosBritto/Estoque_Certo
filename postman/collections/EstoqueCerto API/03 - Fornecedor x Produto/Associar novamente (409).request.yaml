@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fornecedores-produtos"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fornecedorId": {{fornecedorId}},
+      "produtoId": {{produtoId}}
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 409", function () {
+          pm.response.to.have.status(409);
+      });
+
+      pm.test("Resposta tem mensagem de erro", function () {
+          pm.expect(pm.response.json()).to.have.property("erro");
+      });
+    language: text/javascript
+order: 2000

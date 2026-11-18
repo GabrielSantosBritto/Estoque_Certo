@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/produtos/{{produtoId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Nome atualizado e código mantido", function () {
+          const p = pm.response.json();
+          pm.expect(p.nome).to.eql("Arroz 5kg Tipo 1");
+          pm.expect(p.codigo).to.eql(pm.collectionVariables.get("produtoCodigo"));
+      });
+    language: text/javascript
+order: 11000
