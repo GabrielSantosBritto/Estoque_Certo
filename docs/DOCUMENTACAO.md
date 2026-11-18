@@ -17,7 +17,7 @@
 
 O EstoqueCerto é um sistema de gestão de compras e controle de estoque
 voltado a pequenos comércios. O sistema gerencia fornecedores, produtos,
-compras, recebimentos, lotes, movimentações de estoque e devoluções.
+compras, recebimentos, movimentações de estoque e devoluções.
 
 A aplicação será uma API HTTP que recebe e devolve JSON. O Postman será
 utilizado para testar as rotas. Não faz parte do escopo atual
@@ -30,10 +30,20 @@ Hibernate/JPA.
 -   Relacionar fornecedores aos produtos que podem fornecer.
 -   Registrar compras e seus itens.
 -   Controlar o recebimento e a entrada de mercadorias no estoque.
--   Controlar lotes com estratégia FIFO.
 -   Registrar movimentações de estoque.
 -   Registrar devoluções ao fornecedor.
 -   Disponibilizar operações por API HTTP.
+
+### Decisão de escopo (17/11)
+
+Por causa do prazo de entrega (27/11), o controle de **lotes com
+estratégia FIFO foi retirado do escopo**. O estoque passa a ser
+controlado por produto, e todo o histórico continua registrado em
+`MovimentacaoEstoque`. O controle por lote fica registrado como evolução
+futura (seção 15) e não deve ser implementado sem nova decisão da equipe.
+
+A integração com a **BrasilAPI permanece obrigatória**, pois atende ao
+requisito de consumo de API externa.
 
 ## 2. Tecnologias
 
@@ -91,7 +101,7 @@ Respostas não devem expor credenciais ou detalhes internos do banco.
 
 ## 4. Entidades e regras de negócio
 
-O domínio possui nove entidades principais.
+O domínio possui sete entidades principais.
 
 ### 4.1 Fornecedor
 
@@ -123,6 +133,9 @@ inicial igual a zero. - Produto começa ativo. - Atualização cadastral
 não altera diretamente o estoque. - Exclusão lógica por
 `ativo = false`. - Entradas e saídas devem ocorrer pelos fluxos de
 movimentação.
+- `quantidadeEstoque` só é alterada junto com o registro de uma
+`MovimentacaoEstoque`, **na mesma transação**. Nenhuma rota altera o
+estoque diretamente.
 
 **Unidades previstas:** `UN`, `KG`, `L`, `M`, `CX`, `PCT`.
 
@@ -142,9 +155,10 @@ pode ter vários fornecedores. - O par fornecedor/produto não pode se
 repetir. - O Service deve verificar se os dois registros existem e estão
 ativos antes de associá-los.
 
-**Estado:** Entity, RequestDTO, ResponseDTO, Mapper e Repository criados
-e compilados. Tabela MySQL criada com chaves estrangeiras e restrição
-única. Service, Controller, rotas e testes ainda pendentes.
+**Estado:** Entity, DTOs, Mapper, Repository, Service, Controller e
+rotas implementados e compilados (branch `feature/fornecedor-produto`).
+Tabela MySQL criada com chaves estrangeiras e restrição única.
+Testes no Postman pendentes.
 
 ### 4.4 Compra
 
@@ -157,8 +171,9 @@ Representa uma aquisição feita junto a um fornecedor.
 **Regras:** - Status inicial `PENDENTE`. - Frete e desconto opcionais,
 padrão 0. - Total calculado, não persistido como atributo. - Compra deve
 possuir ao menos um item. - Só pode ser recebida ou cancelada enquanto
-pendente. - Fornecedor deve estar ativo na criação. - Recebimento deve
-atualizar estoque e gerar lotes em uma transação.
+pendente. - Fornecedor deve estar ativo na criação. - O recebimento gera
+uma movimentação de ENTRADA por item e atualiza o estoque de cada
+produto, tudo em uma única transação.
 
 ### 4.5 ItemCompra
 
@@ -172,31 +187,22 @@ calculado. - Preço unitário é o preço de aquisição, diferente do preço
 de venda do Produto. - Mesmo produto não pode repetir na mesma compra. -
 Itens só podem ser alterados enquanto a compra estiver pendente.
 
-### 4.6 LoteEstoque
-
-Representa o lote gerado a partir de um ItemCompra recebido.
-
-**Atributos:** `id`, `itemCompra`, `quantidadeInicial`,
-`quantidadeDisponivel` (`BigDecimal`), `dataEntrada` (`LocalDateTime`).
-
-**Regras:** - Cada ItemCompra recebida gera um lote. - Quantidade
-inicial é preservada. - Quantidade disponível não pode ser negativa. -
-Lote permanece no histórico mesmo zerado. - Baixas seguem FIFO (First
-In, First Out).
-
-### 4.7 MovimentacaoEstoque
+### 4.6 MovimentacaoEstoque
 
 Registra entradas e saídas de estoque.
 
-**Atributos:** `id`, `lote`, `itemDevolucao` (opcional), `tipo`,
-`origem`, `quantidade`, `dataMovimentacao`, `motivo` (quando aplicável).
+**Atributos:** `id`, `produto`, `tipo`, `origem`, `quantidade`,
+`dataMovimentacao`, `itemCompra` (quando a origem é COMPRA),
+`itemDevolucao` (quando a origem é DEVOLUCAO), `motivo` (obrigatório
+quando a origem é AJUSTE).
 
 **Regras:** - Quantidade sempre positiva. - Tipos: `ENTRADA`, `SAIDA`. -
 Origens: `COMPRA`, `VENDA`, `DEVOLUCAO`, `AJUSTE`. - Histórico não deve
 ser editado ou apagado para corrigir erros; correções são novas
-movimentações de ajuste. - Venda está prevista para evolução futura.
+movimentações de ajuste. - Saída não pode deixar o estoque do produto
+negativo. - Venda está prevista para evolução futura.
 
-### 4.8 Devolucao
+### 4.7 Devolucao
 
 Representa uma devolução ao fornecedor vinculada a uma compra.
 
@@ -209,15 +215,18 @@ item. - Só pode ser concluída ou cancelada enquanto pendente. -
 Conclusão gera movimentações de saída. - Cancelamento não altera
 estoque. - Conclusão deve ser transacional.
 
-### 4.9 ItemDevolucao
+### 4.8 ItemDevolucao
 
-Representa a quantidade de um lote incluída em uma devolução.
+Representa a quantidade de um item comprado que será devolvida.
 
-**Atributos:** `id`, `devolucao`, `lote`, `quantidade` (`BigDecimal`).
+**Atributos:** `id`, `devolucao`, `itemCompra`, `quantidade`
+(`BigDecimal`).
 
-**Regras:** - Quantidade maior que zero e não superior à disponível no
-lote. - Lote deve pertencer a um item da compra relacionada à
-devolução. - Conclusão da devolução gera a movimentação de saída
+**Regras:** - Quantidade maior que zero. - O `itemCompra` deve pertencer
+à mesma compra da devolução. - A soma devolvida de um item (considerando
+devoluções concluídas) não pode ultrapassar a quantidade comprada. - Na
+conclusão, a quantidade não pode ser maior que o estoque atual do
+produto. - Conclusão da devolução gera a movimentação de saída
 correspondente.
 
 ## 5. Relacionamentos
@@ -229,11 +238,12 @@ correspondente.
   Fornecedor    Compra                1:N
   Compra        ItemCompra            1:N
   Produto       ItemCompra            1:N
-  ItemCompra    LoteEstoque           1:1
-  LoteEstoque   MovimentacaoEstoque   1:N
+  Produto       MovimentacaoEstoque   1:N
+  ItemCompra    MovimentacaoEstoque   1:N (opcional)
   Compra        Devolucao             1:N
   Devolucao     ItemDevolucao         1:N
-  LoteEstoque   ItemDevolucao         1:N
+  ItemCompra    ItemDevolucao         1:N
+  ItemDevolucao MovimentacaoEstoque   1:N (opcional)
 
 O relacionamento N:N entre Fornecedor e Produto é resolvido pela
 entidade associativa `FornecedorProduto`.
@@ -246,12 +256,11 @@ Fornecedor 1 --- N FornecedorProduto N --- 1 Produto
 Fornecedor 1 --- N Compra
 Compra 1 --- N ItemCompra
 Produto 1 --- N ItemCompra
-ItemCompra 1 --- 1 LoteEstoque
-LoteEstoque 1 --- N MovimentacaoEstoque
+Produto 1 --- N MovimentacaoEstoque
 
 Compra 1 --- N Devolucao
 Devolucao 1 --- N ItemDevolucao
-LoteEstoque 1 --- N ItemDevolucao
+ItemCompra 1 --- N ItemDevolucao
 ```
 
 ## 6. DTOs e Mappers
@@ -314,22 +323,84 @@ nos módulos existentes.
 
 **Categoria:** GoF comportamental.
 
-Encapsula operações de negócio explícitas. Commands previstos: -
-`ConfirmarRecebimentoCommand`: confirma recebimento de compra, gera
-lotes e movimentações de entrada. - `ConcluirDevolucaoCommand`: conclui
-devolução e gera movimentações de saída.
+**Problema resolvido:** operações que fazem várias gravações
+relacionadas precisam acontecer por completo ou não acontecer. Sem o
+padrão, cada Service repetiria o controle de transação.
 
-As operações devem preservar a consistência transacional. **Estado:**
-planejado, ainda não implementado.
+**Estrutura:**
+
+-   **Command:** interface `Command` com `void executar(Connection conexao)`.
+-   **Comandos concretos:**
+    -   `ConfirmarRecebimentoCommand`: muda a compra para RECEBIDA,
+        gera uma movimentação de ENTRADA por item e atualiza o estoque.
+    -   `ConcluirDevolucaoCommand`: muda a devolução para CONCLUIDA,
+        gera uma movimentação de SAIDA por item e baixa o estoque.
+-   **Invoker:** `ExecutorTransacional`. Abre a conexão, desliga o
+    auto-commit, executa o comando e faz `commit`, ou `rollback` em
+    caso de erro.
+
+O controle de transação fica escrito em um único lugar, e uma nova
+operação composta é só um novo Command.
+
+``` java
+public void executar(Command comando) throws SQLException {
+    try (Connection conexao = DatabaseConnection.getConnection()) {
+        conexao.setAutoCommit(false);
+        try {
+            comando.executar(conexao);
+            conexao.commit();
+        } catch (Exception e) {
+            conexao.rollback();
+            throw e;
+        }
+    }
+}
+```
+
+**Estado:** planejado, ainda não implementado.
 
 ### 7.5 Factory Method
 
 **Categoria:** GoF criacional.
 
-Classe prevista: `MovimentacaoFactory`. Centralizará a criação de
-movimentações de estoque conforme tipo e origem, evitando espalhar a
-lógica de criação pelos Services e Commands. **Estado:** planejado,
-ainda não implementado.
+**Problema resolvido:** cada origem de movimentação tem regras próprias
+de criação (tipo, vínculo e validações). O padrão permite acrescentar
+origens novas, como VENDA, sem alterar as existentes.
+
+**Atenção:** uma classe única com um método estático `criar(tipo,
+origem)` é uma *Simple Factory*, e **não** o Factory Method do GoF. No
+Factory Method, uma classe criadora abstrata declara o método de criação
+e as **subclasses decidem** qual objeto criar.
+
+**Estrutura:**
+
+-   **Creator:** classe abstrata `GeradorMovimentacao`, com o factory
+    method `criarMovimentacao(...)` e a operação comum `registrar(...)`
+    (valida a quantidade e usa o objeto criado).
+-   **Concrete Creators:** `GeradorEntradaCompra` (ENTRADA/COMPRA),
+    `GeradorSaidaDevolucao` (SAIDA/DEVOLUCAO) e `GeradorAjuste`
+    (AJUSTE, exige motivo).
+-   **Product:** `MovimentacaoEstoque`.
+
+``` java
+public abstract class GeradorMovimentacao {
+
+    protected abstract MovimentacaoEstoque criarMovimentacao(
+            Produto produto, BigDecimal quantidade);
+
+    public MovimentacaoEstoque registrar(
+            Produto produto, BigDecimal quantidade) {
+        validarQuantidadePositiva(quantidade);
+        return criarMovimentacao(produto, quantidade);
+    }
+}
+```
+
+Os Commands usam os geradores: o recebimento usa
+`GeradorEntradaCompra` e a conclusão da devolução usa
+`GeradorSaidaDevolucao`.
+
+**Estado:** planejado, ainda não implementado.
 
 ## 8. Integração externa --- BrasilAPI
 
@@ -427,7 +498,7 @@ consideradas implementadas até estarem no FrontController e testadas.
 
 A rota por CNPJ deve ser verificada antes da rota genérica por ID.
 
-### 9.4 FornecedorProduto --- planejadas
+### 9.4 FornecedorProduto --- implementadas, testes pendentes
 
   ---------------------------------------------------------------------------------------------
   Método                  Rota                                          Descrição
@@ -473,7 +544,10 @@ A tabela `produtos` foi alinhada ao código Java com `preco_venda` e
 -   Fechar recursos com `try-with-resources`.
 -   Não concatenar valores de usuário diretamente em SQL.
 -   Utilizar transações em operações com várias gravações relacionadas.
--   Preservar o histórico de compras, lotes e movimentações.
+-   Métodos de Repository usados dentro de uma transação devem
+    **receber a `Connection` como parâmetro**, em vez de abrir a
+    própria. Caso contrário, o `rollback` não desfaz o que eles gravaram.
+-   Preservar o histórico de compras, devoluções e movimentações.
 -   Não usar exclusão em cascata sem decisão explícita de domínio.
 
 ## 11. Estrutura de diretórios
@@ -489,7 +563,12 @@ src/main/java/br/com/estoquecerto/
 │   ├── StatusController.java
 │   ├── ProdutoController.java
 │   ├── FornecedorController.java
-│   └── FornecedorProdutoController.java       (previsto)
+│   └── FornecedorProdutoController.java
+├── command/                                    (previsto)
+│   ├── Command.java
+│   ├── ExecutorTransacional.java
+│   ├── ConfirmarRecebimentoCommand.java
+│   └── ConcluirDevolucaoCommand.java
 ├── dto/
 │   ├── request/
 │   └── response/
@@ -500,6 +579,11 @@ src/main/java/br/com/estoquecerto/
 │   │   └── ServidorHttp.java
 │   └── external/
 │       └── BrasilApiClient.java               (previsto)
+├── factory/                                    (previsto)
+│   ├── GeradorMovimentacao.java
+│   ├── GeradorEntradaCompra.java
+│   ├── GeradorSaidaDevolucao.java
+│   └── GeradorAjuste.java
 ├── mapper/
 ├── model/
 │   ├── entity/
@@ -560,26 +644,34 @@ combinada pela equipe.
 -   Módulo de fornecedores com operações principais testadas.
 -   Código do módulo de produtos.
 -   Ajuste da tabela `produtos` para `preco_venda` e `ativo`.
--   Entity, DTOs, Mapper e Repository de `FornecedorProduto`.
+-   Módulo `FornecedorProduto` completo (Service, Controller e rotas),
+    compilado; testes no Postman pendentes.
 -   Tabela `fornecedor_produto` com FKs e restrição de unicidade.
 
 ### Próximas atividades
 
-1.  Implementar `FornecedorProdutoService`.
-2.  Implementar `FornecedorProdutoController`.
-3.  Adicionar rotas ao `FrontController`.
-4.  Testar associações no Postman.
-5.  Validar CRUD de Produto com MySQL.
+1.  Testar associações no Postman e abrir o PR de `FornecedorProduto`.
+2.  Corrigir os códigos HTTP no FrontController: JSON inválido → 400,
+    recurso inexistente → 404, duplicidade → 409.
+3.  Validar CRUD de Produto com MySQL.
+4.  Versionar o script do banco em `docs/schema.sql`.
+5.  Implementar `ExecutorTransacional` e a interface `Command`.
 6.  Implementar Compra e ItemCompra.
-7.  Implementar LoteEstoque e MovimentacaoEstoque.
-8.  Implementar Devolucao e ItemDevolucao.
-9.  Aplicar Command e Factory Method.
+7.  Implementar MovimentacaoEstoque e o Factory Method.
+8.  Implementar `ConfirmarRecebimentoCommand`.
+9.  Implementar Devolucao, ItemDevolucao e `ConcluirDevolucaoCommand`.
 10. Implementar e testar integração BrasilAPI.
-11. Completar coleção Postman e documentação final.
+11. Completar coleção Postman e README final.
 
 ------------------------------------------------------------------------
 
-## 15. Manutenção deste documento
+## 15. Evoluções futuras (fora do escopo atual)
+
+-   Controle de estoque por lote (`LoteEstoque`) com baixa FIFO.
+-   Vendas (origem `VENDA` em `MovimentacaoEstoque`, nova subclasse de
+    `GeradorMovimentacao`).
+
+## 16. Manutenção deste documento
 
 Este arquivo deve acompanhar a evolução real do sistema. Quando uma
 funcionalidade for implementada, compilada e testada, atualizar seu
