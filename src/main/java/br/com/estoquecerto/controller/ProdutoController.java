@@ -21,6 +21,8 @@ public class ProdutoController {
     public Long cadastrar(ProdutoRequestDTO dto)
             throws SQLException {
 
+        validarDto(dto);
+
         Produto produto = ProdutoMapper.paraEntidade(dto);
 
         return produtoService.cadastrar(produto);
@@ -53,6 +55,8 @@ public class ProdutoController {
     public void atualizar(Long id, ProdutoRequestDTO dto)
             throws SQLException {
 
+        validarDto(dto);
+
         Produto produto = ProdutoMapper.paraEntidade(dto);
 
         produtoService.atualizar(id, produto);
@@ -62,5 +66,14 @@ public class ProdutoController {
     public void desativar(Long id) throws SQLException {
 
         produtoService.desativar(id);
+    }
+
+    private void validarDto(ProdutoRequestDTO dto) {
+
+        if (dto == null) {
+            throw new IllegalArgumentException(
+                "Dados do produto não informados."
+            );
+        }
     }
 }

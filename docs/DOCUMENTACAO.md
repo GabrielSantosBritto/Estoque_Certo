@@ -95,8 +95,26 @@ Cliente HTTP / Postman
   `mapper`                    Conversão entre DTOs e entidades
   `infrastructure/database`   Obtenção de conexões
 
-Códigos HTTP esperados incluem `200 OK`, `201 Created`,
-`400 Bad Request`, `404 Not Found` e `500 Internal Server Error`.
+### Tratamento de erros e códigos HTTP
+
+O `FrontController` centraliza o tratamento de exceções. Os Services
+**não conhecem HTTP**: lançam a exceção que descreve o problema, e o
+FrontController a traduz no código de status.
+
+| Situação | Exceção lançada | Status |
+|---|---|---|
+| Operação bem-sucedida | --- | `200 OK` |
+| Recurso criado | --- | `201 Created` |
+| JSON vazio, malformado ou com campo desconhecido | `JsonProcessingException` | `400 Bad Request` |
+| Dado inválido ou regra de negócio violada | `IllegalArgumentException` | `400 Bad Request` |
+| Recurso inexistente | `RecursoNaoEncontradoException` | `404 Not Found` |
+| Duplicidade ou estado incompatível | `ConflitoException` | `409 Conflict` |
+| Falha no banco ou erro inesperado | `SQLException` / outras | `500 Internal Server Error` |
+
+As exceções próprias ficam no pacote `exception`. Ao implementar um
+módulo novo, usar sempre essas exceções em vez de criar respostas HTTP
+dentro do Service.
+
 Respostas não devem expor credenciais ou detalhes internos do banco.
 
 ## 4. Entidades e regras de negócio
@@ -579,6 +597,9 @@ src/main/java/br/com/estoquecerto/
 │   │   └── ServidorHttp.java
 │   └── external/
 │       └── BrasilApiClient.java               (previsto)
+├── exception/
+│   ├── ConflitoException.java
+│   └── RecursoNaoEncontradoException.java
 ├── factory/                                    (previsto)
 │   ├── GeradorMovimentacao.java
 │   ├── GeradorEntradaCompra.java
@@ -651,8 +672,7 @@ combinada pela equipe.
 ### Próximas atividades
 
 1.  Testar associações no Postman e abrir o PR de `FornecedorProduto`.
-2.  Corrigir os códigos HTTP no FrontController: JSON inválido → 400,
-    recurso inexistente → 404, duplicidade → 409.
+2.  ~~Corrigir os códigos HTTP~~ (branch `fix/status-http`).
 3.  Validar CRUD de Produto com MySQL.
 4.  Versionar o script do banco em `docs/schema.sql`.
 5.  Implementar `ExecutorTransacional` e a interface `Command`.

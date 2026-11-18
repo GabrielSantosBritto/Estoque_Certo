@@ -1,8 +1,11 @@
 package br.com.estoquecerto.service;
 
+import br.com.estoquecerto.exception.ConflitoException;
+import br.com.estoquecerto.exception.RecursoNaoEncontradoException;
 import br.com.estoquecerto.model.entity.Produto;
 import br.com.estoquecerto.repository.ProdutoRepository;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
@@ -33,6 +36,8 @@ public class ProdutoService {
                 "O nome do produto é obrigatório."
             );
         }
+
+        validarValores(produto);
 
         // O código (SKU) é gerado pelo sistema no formato PROD-0001.
         // Um código enviado na requisição é ignorado.
@@ -116,9 +121,11 @@ public class ProdutoService {
             );
         }
 
+        validarValores(produto);
+
         Produto existente = produtoRepository.buscarPorId(id)
                 .orElseThrow(() ->
-                    new IllegalArgumentException("Produto não encontrado.")
+                    new RecursoNaoEncontradoException("Produto não encontrado.")
                 );
 
         if (!existente.isAtivo()) {
@@ -151,11 +158,11 @@ public class ProdutoService {
 
         Produto produto = produtoRepository.buscarPorId(id)
                 .orElseThrow(() ->
-                    new IllegalArgumentException("Produto não encontrado.")
+                    new RecursoNaoEncontradoException("Produto não encontrado.")
                 );
 
         if (!produto.isAtivo()) {
-            throw new IllegalArgumentException(
+            throw new ConflitoException(
                 "O produto já está desativado."
             );
         }
@@ -167,5 +174,26 @@ public class ProdutoService {
         }
     }
 
-}
+    // Valores numéricos do produto
+    private void validarValores(Produto produto) {
 
+        if (produto.getQuantidadeMinima() == null) {
+            throw new IllegalArgumentException(
+                "A quantidade mínima do produto é obrigatória."
+            );
+        }
+
+        if (produto.getQuantidadeMinima().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException(
+                "A quantidade mínima não pode ser negativa."
+            );
+        }
+
+        if (produto.getPrecoVenda() != null &&
+            produto.getPrecoVenda().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException(
+                "O preço de venda não pode ser negativo."
+            );
+        }
+    }
+}

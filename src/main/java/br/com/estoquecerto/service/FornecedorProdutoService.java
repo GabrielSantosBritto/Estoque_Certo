@@ -1,5 +1,7 @@
 package br.com.estoquecerto.service;
 
+import br.com.estoquecerto.exception.ConflitoException;
+import br.com.estoquecerto.exception.RecursoNaoEncontradoException;
 import br.com.estoquecerto.model.entity.Fornecedor;
 import br.com.estoquecerto.model.entity.FornecedorProduto;
 import br.com.estoquecerto.model.entity.Produto;
@@ -33,7 +35,7 @@ public class FornecedorProdutoService {
 
         Fornecedor fornecedor = fornecedorRepository.buscarPorId(fornecedorId)
                 .orElseThrow(() ->
-                    new IllegalArgumentException("Fornecedor não encontrado.")
+                    new RecursoNaoEncontradoException("Fornecedor não encontrado.")
                 );
 
         if (!fornecedor.isAtivo()) {
@@ -44,7 +46,7 @@ public class FornecedorProdutoService {
 
         Produto produto = produtoRepository.buscarPorId(produtoId)
                 .orElseThrow(() ->
-                    new IllegalArgumentException("Produto não encontrado.")
+                    new RecursoNaoEncontradoException("Produto não encontrado.")
                 );
 
         if (!produto.isAtivo()) {
@@ -55,7 +57,7 @@ public class FornecedorProdutoService {
 
         if (fornecedorProdutoRepository.existeAssociacao(
                 fornecedorId, produtoId)) {
-            throw new IllegalArgumentException(
+            throw new ConflitoException(
                 "Este produto já está associado a este fornecedor."
             );
         }
@@ -68,7 +70,7 @@ public class FornecedorProdutoService {
         } catch (SQLIntegrityConstraintViolationException e) {
             // Proteção extra: a UNIQUE (fornecedor_id, produto_id) do banco
             // barra duas requisições simultâneas que passaram pela checagem.
-            throw new IllegalArgumentException(
+            throw new ConflitoException(
                 "Este produto já está associado a este fornecedor."
             );
         }
@@ -96,7 +98,7 @@ public class FornecedorProdutoService {
         validarId(fornecedorId, "ID do fornecedor inválido.");
 
         if (fornecedorRepository.buscarPorId(fornecedorId).isEmpty()) {
-            throw new IllegalArgumentException("Fornecedor não encontrado.");
+            throw new RecursoNaoEncontradoException("Fornecedor não encontrado.");
         }
 
         return fornecedorProdutoRepository.listarPorFornecedor(fornecedorId);
@@ -108,7 +110,7 @@ public class FornecedorProdutoService {
         validarId(id, "ID da associação inválido.");
 
         if (!fornecedorProdutoRepository.excluir(id)) {
-            throw new IllegalArgumentException("Associação não encontrada.");
+            throw new RecursoNaoEncontradoException("Associação não encontrada.");
         }
     }
 

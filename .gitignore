@@ -31,3 +31,8 @@ desktop.ini
 # Arquivos temporários
 *.tmp
 *.bak
+
+# Arquivos de sincronização local do Postman
+# (versionar apenas o EstoqueCerto.postman_collection.json)
+postman/*
+!postman/EstoqueCerto.postman_collection.json
