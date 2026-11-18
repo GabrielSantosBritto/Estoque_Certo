@@ -95,8 +95,26 @@ Cliente HTTP / Postman
   `mapper`                    Conversão entre DTOs e entidades
   `infrastructure/database`   Obtenção de conexões
 
-Códigos HTTP esperados incluem `200 OK`, `201 Created`,
-`400 Bad Request`, `404 Not Found` e `500 Internal Server Error`.
+### Tratamento de erros e códigos HTTP
+
+O `FrontController` centraliza o tratamento de exceções. Os Services
+**não conhecem HTTP**: lançam a exceção que descreve o problema, e o
+FrontController a traduz no código de status.
+
+| Situação | Exceção lançada | Status |
+|---|---|---|
+| Operação bem-sucedida | --- | `200 OK` |
+| Recurso criado | --- | `201 Created` |
+| JSON vazio, malformado ou com campo desconhecido | `JsonProcessingException` | `400 Bad Request` |
+| Dado inválido ou regra de negócio violada | `IllegalArgumentException` | `400 Bad Request` |
+| Recurso inexistente | `RecursoNaoEncontradoException` | `404 Not Found` |
+| Duplicidade ou estado incompatível | `ConflitoException` | `409 Conflict` |
+| Falha no banco ou erro inesperado | `SQLException` / outras | `500 Internal Server Error` |
+
+As exceções próprias ficam no pacote `exception`. Ao implementar um
+módulo novo, usar sempre essas exceções em vez de criar respostas HTTP
+dentro do Service.
+
 Respostas não devem expor credenciais ou detalhes internos do banco.
 
 ## 4. Entidades e regras de negócio
@@ -357,7 +375,7 @@ public void executar(Command comando) throws SQLException {
 }
 ```
 
-**Estado:** planejado, ainda não implementado.
+**Estado:** `Command` e `ExecutorTransacional` implementados. Comandos concretos pendentes.
 
 ### 7.5 Factory Method
 
@@ -400,7 +418,75 @@ Os Commands usam os geradores: o recebimento usa
 `GeradorEntradaCompra` e a conclusão da devolução usa
 `GeradorSaidaDevolucao`.
 
-**Estado:** planejado, ainda não implementado.
+**Estado:** `GeradorMovimentacao` (Creator) e `MovimentacaoEstoque` (Product) implementados. Subclasses concretas pendentes.
+
+### 7.6 Contrato entre os módulos
+
+Compra, Movimentação e Devolução são desenvolvidos por pessoas
+diferentes ao mesmo tempo. Para os módulos se encaixarem, as classes e
+assinaturas abaixo são **fixas**: podem ser implementadas, mas não
+renomeadas nem alteradas sem combinar com a equipe.
+
+**Já implementado (branch `feature/contrato-transacao`):**
+
+| Classe | Papel |
+|---|---|
+| `command/Command` | Interface `executar(Connection)` |
+| `command/ExecutorTransacional` | Abre a transação, executa, faz commit ou rollback |
+| `factory/GeradorMovimentacao` | Creator abstrato com `registrar(produto, quantidade)` |
+| `model/entity/MovimentacaoEstoque` | Entidade da movimentação |
+| `model/enums/TipoMovimentacao` | `ENTRADA`, `SAIDA` |
+| `model/enums/OrigemMovimentacao` | `COMPRA`, `VENDA`, `DEVOLUCAO`, `AJUSTE` |
+
+**A implementar — módulo Movimentação:**
+
+``` java
+// factory/ — subclasses de GeradorMovimentacao
+new GeradorEntradaCompra(Long itemCompraId)
+new GeradorSaidaDevolucao(Long itemDevolucaoId)
+new GeradorAjuste(TipoMovimentacao tipo, String motivo)
+
+// repository/MovimentacaoRepository
+Long salvar(Connection conexao, MovimentacaoEstoque movimentacao)
+List<MovimentacaoEstoque> listarPorProduto(Long produtoId)
+
+// repository/ProdutoRepository (novo método)
+// Soma a variação ao estoque de forma atômica. Retorna false se o
+// resultado ficaria negativo (nada é alterado nesse caso).
+boolean atualizarEstoque(Connection conexao, Long produtoId, BigDecimal variacao)
+```
+
+Sugestão de SQL para `atualizarEstoque`, que impede estoque negativo
+mesmo com requisições simultâneas:
+
+``` sql
+UPDATE produtos
+SET quantidade_estoque = quantidade_estoque + ?
+WHERE id = ? AND quantidade_estoque + ? >= 0
+```
+
+**Como um Command usa o contrato** (exemplo do recebimento de compra):
+
+``` java
+public void executar(Connection conexao) throws SQLException {
+    // ... valida e muda a compra para RECEBIDA usando "conexao"
+
+    for (ItemCompra item : itens) {
+        MovimentacaoEstoque mov = new GeradorEntradaCompra(item.getId())
+                .registrar(item.getProduto(), item.getQuantidade());
+
+        movimentacaoRepository.salvar(conexao, mov);
+
+        if (!produtoRepository.atualizarEstoque(
+                conexao, item.getProduto().getId(), mov.getVariacaoEstoque())) {
+            throw new ConflitoException("Estoque insuficiente.");
+        }
+    }
+}
+
+// No Service:
+executorTransacional.executar(new ConfirmarRecebimentoCommand(compraId));
+```
 
 ## 8. Integração externa --- BrasilAPI
 
@@ -564,11 +650,11 @@ src/main/java/br/com/estoquecerto/
 │   ├── ProdutoController.java
 │   ├── FornecedorController.java
 │   └── FornecedorProdutoController.java
-├── command/                                    (previsto)
+├── command/
 │   ├── Command.java
 │   ├── ExecutorTransacional.java
-│   ├── ConfirmarRecebimentoCommand.java
-│   └── ConcluirDevolucaoCommand.java
+│   ├── ConfirmarRecebimentoCommand.java        (previsto)
+│   └── ConcluirDevolucaoCommand.java           (previsto)
 ├── dto/
 │   ├── request/
 │   └── response/
@@ -579,11 +665,14 @@ src/main/java/br/com/estoquecerto/
 │   │   └── ServidorHttp.java
 │   └── external/
 │       └── BrasilApiClient.java               (previsto)
-├── factory/                                    (previsto)
+├── exception/
+│   ├── ConflitoException.java
+│   └── RecursoNaoEncontradoException.java
+├── factory/
 │   ├── GeradorMovimentacao.java
-│   ├── GeradorEntradaCompra.java
-│   ├── GeradorSaidaDevolucao.java
-│   └── GeradorAjuste.java
+│   ├── GeradorEntradaCompra.java               (previsto)
+│   ├── GeradorSaidaDevolucao.java              (previsto)
+│   └── GeradorAjuste.java                      (previsto)
 ├── mapper/
 ├── model/
 │   ├── entity/
@@ -651,8 +740,7 @@ combinada pela equipe.
 ### Próximas atividades
 
 1.  Testar associações no Postman e abrir o PR de `FornecedorProduto`.
-2.  Corrigir os códigos HTTP no FrontController: JSON inválido → 400,
-    recurso inexistente → 404, duplicidade → 409.
+2.  ~~Corrigir os códigos HTTP~~ (branch `fix/status-http`).
 3.  Validar CRUD de Produto com MySQL.
 4.  Versionar o script do banco em `docs/schema.sql`.
 5.  Implementar `ExecutorTransacional` e a interface `Command`.
