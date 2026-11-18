@@ -1,6 +1,9 @@
 
 package br.com.estoquecerto.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import br.com.estoquecerto.exception.ConflitoException;
+import br.com.estoquecerto.exception.RecursoNaoEncontradoException;
 import br.com.estoquecerto.dto.request.ProdutoRequestDTO;
 import br.com.estoquecerto.dto.response.ProdutoResponseDTO;
 import br.com.estoquecerto.dto.request.FornecedorRequestDTO;
@@ -197,6 +200,25 @@ public class FrontController {
             // Rota não encontrada
             enviarJson(exchange, 404, Map.of(
                 "erro", "Rota não encontrada"
+            ));
+
+        } catch (JsonProcessingException e) {
+
+            // Corpo vazio, JSON malformado ou campo desconhecido
+            enviarJson(exchange, 400, Map.of(
+                "erro", "JSON inválido. Verifique o corpo da requisição."
+            ));
+
+        } catch (RecursoNaoEncontradoException e) {
+
+            enviarJson(exchange, 404, Map.of(
+                "erro", e.getMessage()
+            ));
+
+        } catch (ConflitoException e) {
+
+            enviarJson(exchange, 409, Map.of(
+                "erro", e.getMessage()
             ));
 
         } catch (IllegalArgumentException e) {

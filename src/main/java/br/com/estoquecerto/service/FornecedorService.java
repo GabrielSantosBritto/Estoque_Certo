@@ -1,6 +1,8 @@
 
 package br.com.estoquecerto.service;
 
+import br.com.estoquecerto.exception.ConflitoException;
+import br.com.estoquecerto.exception.RecursoNaoEncontradoException;
 import br.com.estoquecerto.model.entity.Fornecedor;
 import br.com.estoquecerto.repository.FornecedorRepository;
 
@@ -41,7 +43,7 @@ public class FornecedorService {
 
         if (fornecedorRepository.buscarPorCnpj(
                 fornecedor.getCnpj()).isPresent()) {
-            throw new IllegalArgumentException(
+            throw new ConflitoException(
                 "Já existe um fornecedor cadastrado com esse CNPJ."
             );
         }
@@ -106,7 +108,7 @@ public class FornecedorService {
 
         Fornecedor existente = fornecedorRepository.buscarPorId(id)
                 .orElseThrow(() ->
-                    new IllegalArgumentException(
+                    new RecursoNaoEncontradoException(
                         "Fornecedor não encontrado."
                     )
                 );
@@ -151,13 +153,13 @@ public class FornecedorService {
 
         Fornecedor fornecedor = fornecedorRepository.buscarPorId(id)
                 .orElseThrow(() ->
-                    new IllegalArgumentException(
+                    new RecursoNaoEncontradoException(
                         "Fornecedor não encontrado."
                     )
                 );
 
         if (!fornecedor.isAtivo()) {
-            throw new IllegalArgumentException(
+            throw new ConflitoException(
                 "O fornecedor já está desativado."
             );
         }
