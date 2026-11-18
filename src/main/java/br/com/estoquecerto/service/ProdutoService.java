@@ -4,10 +4,13 @@ import br.com.estoquecerto.model.entity.Produto;
 import br.com.estoquecerto.repository.ProdutoRepository;
 
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
 public class ProdutoService {
+
+    private static final int TENTATIVAS_GERAR_CODIGO = 3;
 
     private final ProdutoRepository produtoRepository;
 
@@ -31,21 +34,35 @@ public class ProdutoService {
             );
         }
 
-        if (produto.getCodigo() == null ||
-            produto.getCodigo().isBlank()) {
-            throw new IllegalArgumentException(
-                "O código do produto é obrigatório."
+        // O código (SKU) é gerado pelo sistema no formato PROD-0001.
+        // Um código enviado na requisição é ignorado.
+        for (int tentativa = 1; tentativa <= TENTATIVAS_GERAR_CODIGO;
+                tentativa++) {
+
+            Produto novoProduto = new Produto(
+                produtoRepository.gerarProximoCodigo(),
+                produto.getNome(),
+                produto.getDescricao(),
+                produto.getUnidadeMedida(),
+                produto.getQuantidadeMinima(),
+                produto.getPrecoVenda()
             );
+
+            try {
+                return produtoRepository.salvar(novoProduto);
+
+            } catch (SQLIntegrityConstraintViolationException e) {
+                // Outro cadastro simultâneo usou o mesmo código:
+                // gera o próximo e tenta de novo.
+                if (tentativa == TENTATIVAS_GERAR_CODIGO) {
+                    throw e;
+                }
+            }
         }
 
-        if (produtoRepository.buscarPorCodigo(
-                produto.getCodigo()).isPresent()) {
-            throw new IllegalArgumentException(
-                "Já existe um produto cadastrado com esse código."
-            );
-        }
-
-        return produtoRepository.salvar(produto);
+        throw new IllegalStateException(
+            "Não foi possível gerar o código do produto."
+        );
     }
 
     // Buscar produto pelo ID

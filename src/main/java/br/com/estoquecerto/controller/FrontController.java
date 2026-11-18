@@ -5,6 +5,8 @@ import br.com.estoquecerto.dto.request.ProdutoRequestDTO;
 import br.com.estoquecerto.dto.response.ProdutoResponseDTO;
 import br.com.estoquecerto.dto.request.FornecedorRequestDTO;
 import br.com.estoquecerto.dto.response.FornecedorResponseDTO;
+import br.com.estoquecerto.dto.request.FornecedorProdutoRequestDTO;
+import br.com.estoquecerto.dto.response.FornecedorProdutoResponseDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
@@ -20,12 +22,14 @@ public class FrontController {
     private final StatusController statusController;
     private final ProdutoController produtoController;
     private final FornecedorController fornecedorController;
+    private final FornecedorProdutoController fornecedorProdutoController;
     private final ObjectMapper objectMapper;
 
     public FrontController() {
         this.statusController = new StatusController();
         this.produtoController = new ProdutoController();
         this.fornecedorController = new FornecedorController();
+        this.fornecedorProdutoController = new FornecedorProdutoController();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -120,6 +124,21 @@ public class FrontController {
                 return;
             }
 
+            // Listar produtos de um fornecedor
+            // (precisa vir antes da rota genérica /api/fornecedores/{id})
+            if (metodo.equals("GET") &&
+                    caminho.startsWith("/api/fornecedores/") &&
+                    caminho.endsWith("/produtos")) {
+
+                String idTexto = caminho.substring(
+                    "/api/fornecedores/".length(),
+                    caminho.length() - "/produtos".length()
+                );
+
+                listarProdutosDoFornecedor(exchange, idTexto);
+                return;
+            }
+
             // Buscar, atualizar ou desativar fornecedor pelo ID
             if (caminho.startsWith("/api/fornecedores/")) {
 
@@ -139,6 +158,38 @@ public class FrontController {
 
                 if (metodo.equals("DELETE")) {
                     desativarFornecedor(exchange, idTexto);
+                    return;
+                }
+            }
+
+            // Rotas de associações fornecedor-produto
+            if (metodo.equals("POST") &&
+                    caminho.equals("/api/fornecedores-produtos")) {
+
+                associarFornecedorProduto(exchange);
+                return;
+            }
+
+            if (metodo.equals("GET") &&
+                    caminho.equals("/api/fornecedores-produtos")) {
+
+                listarFornecedoresProdutos(exchange);
+                return;
+            }
+
+            if (caminho.startsWith("/api/fornecedores-produtos/")) {
+
+                String idTexto = caminho.substring(
+                    "/api/fornecedores-produtos/".length()
+                );
+
+                if (metodo.equals("GET")) {
+                    buscarFornecedorProdutoPorId(exchange, idTexto);
+                    return;
+                }
+
+                if (metodo.equals("DELETE")) {
+                    excluirFornecedorProduto(exchange, idTexto);
                     return;
                 }
             }
@@ -355,6 +406,78 @@ public class FrontController {
 
         enviarJson(exchange, 200, Map.of(
             "mensagem", "Fornecedor desativado com sucesso."
+        ));
+    }
+
+    // =========================
+    // MÉTODOS DE FORNECEDOR-PRODUTO
+    // =========================
+
+    private void associarFornecedorProduto(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        FornecedorProdutoRequestDTO dto = objectMapper.readValue(
+            exchange.getRequestBody(),
+            FornecedorProdutoRequestDTO.class
+        );
+
+        Long id = fornecedorProdutoController.associar(dto);
+
+        enviarJson(exchange, 201, Map.of(
+            "id", id,
+            "mensagem", "Produto associado ao fornecedor com sucesso."
+        ));
+    }
+
+    private void listarFornecedoresProdutos(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        List<FornecedorProdutoResponseDTO> associacoes =
+            fornecedorProdutoController.listarTodos();
+
+        enviarJson(exchange, 200, associacoes);
+    }
+
+    private void listarProdutosDoFornecedor(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long fornecedorId = converterId(idTexto);
+
+        List<FornecedorProdutoResponseDTO> associacoes =
+            fornecedorProdutoController.listarPorFornecedor(fornecedorId);
+
+        enviarJson(exchange, 200, associacoes);
+    }
+
+    private void buscarFornecedorProdutoPorId(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        Optional<FornecedorProdutoResponseDTO> associacao =
+            fornecedorProdutoController.buscarPorId(id);
+
+        if (associacao.isPresent()) {
+            enviarJson(exchange, 200, associacao.get());
+        } else {
+            enviarJson(exchange, 404, Map.of(
+                "erro", "Associação não encontrada."
+            ));
+        }
+    }
+
+    private void excluirFornecedorProduto(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        fornecedorProdutoController.excluir(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Associação excluída com sucesso."
         ));
     }
 

@@ -218,6 +218,27 @@ public class ProdutoRepository {
         }
     }
 
+    // Gera o próximo código no formato PROD-0001
+    public String gerarProximoCodigo() throws SQLException {
+
+        String sql = """
+            SELECT COALESCE(
+                MAX(CAST(SUBSTRING(codigo, 6) AS UNSIGNED)), 0
+            ) + 1
+            FROM produtos
+            WHERE codigo LIKE 'PROD-%'
+            """;
+
+        try (Connection conexao = DatabaseConnection.getConnection();
+             PreparedStatement comando = conexao.prepareStatement(sql);
+             ResultSet resultado = comando.executeQuery()) {
+
+            resultado.next();
+
+            return String.format("PROD-%04d", resultado.getLong(1));
+        }
+    }
+
     public boolean desativar(Long id) throws SQLException {
 
         String sql = """
