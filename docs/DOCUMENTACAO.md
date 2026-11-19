@@ -375,7 +375,7 @@ public void executar(Command comando) throws SQLException {
 }
 ```
 
-**Estado:** planejado, ainda não implementado.
+**Estado:** `Command` e `ExecutorTransacional` implementados. Comandos concretos pendentes.
 
 ### 7.5 Factory Method
 
@@ -418,7 +418,75 @@ Os Commands usam os geradores: o recebimento usa
 `GeradorEntradaCompra` e a conclusão da devolução usa
 `GeradorSaidaDevolucao`.
 
-**Estado:** planejado, ainda não implementado.
+**Estado:** `GeradorMovimentacao` (Creator) e `MovimentacaoEstoque` (Product) implementados. Subclasses concretas pendentes.
+
+### 7.6 Contrato entre os módulos
+
+Compra, Movimentação e Devolução são desenvolvidos por pessoas
+diferentes ao mesmo tempo. Para os módulos se encaixarem, as classes e
+assinaturas abaixo são **fixas**: podem ser implementadas, mas não
+renomeadas nem alteradas sem combinar com a equipe.
+
+**Já implementado (branch `feature/contrato-transacao`):**
+
+| Classe | Papel |
+|---|---|
+| `command/Command` | Interface `executar(Connection)` |
+| `command/ExecutorTransacional` | Abre a transação, executa, faz commit ou rollback |
+| `factory/GeradorMovimentacao` | Creator abstrato com `registrar(produto, quantidade)` |
+| `model/entity/MovimentacaoEstoque` | Entidade da movimentação |
+| `model/enums/TipoMovimentacao` | `ENTRADA`, `SAIDA` |
+| `model/enums/OrigemMovimentacao` | `COMPRA`, `VENDA`, `DEVOLUCAO`, `AJUSTE` |
+
+**A implementar — módulo Movimentação:**
+
+``` java
+// factory/ — subclasses de GeradorMovimentacao
+new GeradorEntradaCompra(Long itemCompraId)
+new GeradorSaidaDevolucao(Long itemDevolucaoId)
+new GeradorAjuste(TipoMovimentacao tipo, String motivo)
+
+// repository/MovimentacaoRepository
+Long salvar(Connection conexao, MovimentacaoEstoque movimentacao)
+List<MovimentacaoEstoque> listarPorProduto(Long produtoId)
+
+// repository/ProdutoRepository (novo método)
+// Soma a variação ao estoque de forma atômica. Retorna false se o
+// resultado ficaria negativo (nada é alterado nesse caso).
+boolean atualizarEstoque(Connection conexao, Long produtoId, BigDecimal variacao)
+```
+
+Sugestão de SQL para `atualizarEstoque`, que impede estoque negativo
+mesmo com requisições simultâneas:
+
+``` sql
+UPDATE produtos
+SET quantidade_estoque = quantidade_estoque + ?
+WHERE id = ? AND quantidade_estoque + ? >= 0
+```
+
+**Como um Command usa o contrato** (exemplo do recebimento de compra):
+
+``` java
+public void executar(Connection conexao) throws SQLException {
+    // ... valida e muda a compra para RECEBIDA usando "conexao"
+
+    for (ItemCompra item : itens) {
+        MovimentacaoEstoque mov = new GeradorEntradaCompra(item.getId())
+                .registrar(item.getProduto(), item.getQuantidade());
+
+        movimentacaoRepository.salvar(conexao, mov);
+
+        if (!produtoRepository.atualizarEstoque(
+                conexao, item.getProduto().getId(), mov.getVariacaoEstoque())) {
+            throw new ConflitoException("Estoque insuficiente.");
+        }
+    }
+}
+
+// No Service:
+executorTransacional.executar(new ConfirmarRecebimentoCommand(compraId));
+```
 
 ## 8. Integração externa --- BrasilAPI
 
@@ -582,11 +650,11 @@ src/main/java/br/com/estoquecerto/
 │   ├── ProdutoController.java
 │   ├── FornecedorController.java
 │   └── FornecedorProdutoController.java
-├── command/                                    (previsto)
+├── command/
 │   ├── Command.java
 │   ├── ExecutorTransacional.java
-│   ├── ConfirmarRecebimentoCommand.java
-│   └── ConcluirDevolucaoCommand.java
+│   ├── ConfirmarRecebimentoCommand.java        (previsto)
+│   └── ConcluirDevolucaoCommand.java           (previsto)
 ├── dto/
 │   ├── request/
 │   └── response/
@@ -600,11 +668,11 @@ src/main/java/br/com/estoquecerto/
 ├── exception/
 │   ├── ConflitoException.java
 │   └── RecursoNaoEncontradoException.java
-├── factory/                                    (previsto)
+├── factory/
 │   ├── GeradorMovimentacao.java
-│   ├── GeradorEntradaCompra.java
-│   ├── GeradorSaidaDevolucao.java
-│   └── GeradorAjuste.java
+│   ├── GeradorEntradaCompra.java               (previsto)
+│   ├── GeradorSaidaDevolucao.java              (previsto)
+│   └── GeradorAjuste.java                      (previsto)
 ├── mapper/
 ├── model/
 │   ├── entity/
