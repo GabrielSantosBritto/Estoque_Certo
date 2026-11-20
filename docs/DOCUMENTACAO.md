@@ -220,6 +220,13 @@ ser editado ou apagado para corrigir erros; correções são novas
 movimentações de ajuste. - Saída não pode deixar o estoque do produto
 negativo. - Venda está prevista para evolução futura.
 
+**Estado:** geradores (Factory Method), `MovimentacaoRepository`,
+`ProdutoRepository.atualizarEstoque`, tabela `movimentacoes_estoque`,
+ajuste manual (`RegistrarAjusteCommand`) e consulta do histórico por
+produto implementados, compilados e testados no Postman (pasta
+`04 - Movimentações`, branch `feature/movimentacao`).
+Ajuste em produto inativo é recusado (400).
+
 ### 4.7 Devolucao
 
 Representa uma devolução ao fornecedor vinculada a uma compra.
@@ -353,6 +360,8 @@ padrão, cada Service repetiria o controle de transação.
         gera uma movimentação de ENTRADA por item e atualiza o estoque.
     -   `ConcluirDevolucaoCommand`: muda a devolução para CONCLUIDA,
         gera uma movimentação de SAIDA por item e baixa o estoque.
+    -   `RegistrarAjusteCommand`: registra uma movimentação de AJUSTE
+        (entrada ou saída, com motivo) e atualiza o estoque.
 -   **Invoker:** `ExecutorTransacional`. Abre a conexão, desliga o
     auto-commit, executa o comando e faz `commit`, ou `rollback` em
     caso de erro.
@@ -375,7 +384,7 @@ public void executar(Command comando) throws SQLException {
 }
 ```
 
-**Estado:** `Command` e `ExecutorTransacional` implementados. Comandos concretos pendentes.
+**Estado:** `Command`, `ExecutorTransacional` e `RegistrarAjusteCommand` implementados. `ConfirmarRecebimentoCommand` e `ConcluirDevolucaoCommand` pendentes (módulos Compra e Devolução).
 
 ### 7.5 Factory Method
 
@@ -418,7 +427,7 @@ Os Commands usam os geradores: o recebimento usa
 `GeradorEntradaCompra` e a conclusão da devolução usa
 `GeradorSaidaDevolucao`.
 
-**Estado:** `GeradorMovimentacao` (Creator) e `MovimentacaoEstoque` (Product) implementados. Subclasses concretas pendentes.
+**Estado:** Creator, Product e as três subclasses concretas (`GeradorEntradaCompra`, `GeradorSaidaDevolucao`, `GeradorAjuste`) implementados.
 
 ### 7.6 Contrato entre os módulos
 
@@ -438,7 +447,7 @@ renomeadas nem alteradas sem combinar com a equipe.
 | `model/enums/TipoMovimentacao` | `ENTRADA`, `SAIDA` |
 | `model/enums/OrigemMovimentacao` | `COMPRA`, `VENDA`, `DEVOLUCAO`, `AJUSTE` |
 
-**A implementar — módulo Movimentação:**
+**Módulo Movimentação — implementado (branch `feature/movimentacao`):**
 
 ``` java
 // factory/ — subclasses de GeradorMovimentacao
@@ -601,7 +610,35 @@ A rota por CNPJ deve ser verificada antes da rota genérica por ID.
   DELETE                  `/api/fornecedores-produtos/{id}`             Exclui associação
   ---------------------------------------------------------------------------------------------
 
-### 9.5 Compras e devoluções
+### 9.5 Movimentações --- implementadas e testadas
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/movimentacoes/ajustes` | Registra ajuste manual de estoque |
+| GET | `/api/produtos/{id}/movimentacoes` | Histórico do produto (mais recente primeiro) |
+
+Corpo do ajuste:
+
+``` json
+{
+  "produtoId": 1,
+  "tipo": "SAIDA",
+  "quantidade": 3,
+  "motivo": "Perda por avaria"
+}
+```
+
+Respostas: `201` com o `id` da movimentação; `400` para tipo, quantidade
+ou motivo inválidos e para produto inativo; `404` para produto
+inexistente; `409` quando a saída deixaria o estoque negativo.
+
+Entradas por compra e saídas por devolução não têm rota própria: são
+geradas pelos Commands de recebimento e de conclusão da devolução.
+
+A rota de movimentações do produto é verificada antes da rota genérica
+`/api/produtos/{id}`.
+
+### 9.6 Compras e devoluções
 
 As rotas completas serão definidas durante a implementação dos
 respectivos Controllers. Deverão contemplar cadastro, consulta,
@@ -616,6 +653,13 @@ Tabelas verificadas no estado atual:
 -   `fornecedores`
 -   `produtos`
 -   `fornecedor_produto`
+-   `movimentacoes_estoque`
+
+A tabela `movimentacoes_estoque` tem FK para `produtos` e `CHECK` para
+tipo, origem, quantidade positiva e vínculo obrigatório por origem.
+`item_compra_id` e `item_devolucao_id` ficam **sem FK** até que as
+tabelas de itens de compra e de devolução existam; o `schema.sql` traz
+o `ALTER TABLE` que o módulo correspondente deve acrescentar.
 
 A tabela `fornecedor_produto` possui: - `id`: PK auto incremento. -
 `fornecedor_id`: FK para `fornecedores(id)`. - `produto_id`: FK para
@@ -649,10 +693,12 @@ src/main/java/br/com/estoquecerto/
 │   ├── StatusController.java
 │   ├── ProdutoController.java
 │   ├── FornecedorController.java
-│   └── FornecedorProdutoController.java
+│   ├── FornecedorProdutoController.java
+│   └── MovimentacaoController.java
 ├── command/
 │   ├── Command.java
 │   ├── ExecutorTransacional.java
+│   ├── RegistrarAjusteCommand.java
 │   ├── ConfirmarRecebimentoCommand.java        (previsto)
 │   └── ConcluirDevolucaoCommand.java           (previsto)
 ├── dto/
@@ -670,9 +716,9 @@ src/main/java/br/com/estoquecerto/
 │   └── RecursoNaoEncontradoException.java
 ├── factory/
 │   ├── GeradorMovimentacao.java
-│   ├── GeradorEntradaCompra.java               (previsto)
-│   ├── GeradorSaidaDevolucao.java              (previsto)
-│   └── GeradorAjuste.java                      (previsto)
+│   ├── GeradorEntradaCompra.java
+│   ├── GeradorSaidaDevolucao.java
+│   └── GeradorAjuste.java
 ├── mapper/
 ├── model/
 │   ├── entity/
@@ -736,6 +782,9 @@ combinada pela equipe.
 -   Módulo `FornecedorProduto` completo (Service, Controller e rotas),
     compilado; testes no Postman pendentes.
 -   Tabela `fornecedor_produto` com FKs e restrição de unicidade.
+-   Módulo de Movimentação (Factory Method, repositório, atualização
+    atômica de estoque, ajuste manual e histórico), compilado e testado
+    no Postman.
 
 ### Próximas atividades
 
@@ -745,7 +794,7 @@ combinada pela equipe.
 4.  Versionar o script do banco em `docs/schema.sql`.
 5.  Implementar `ExecutorTransacional` e a interface `Command`.
 6.  Implementar Compra e ItemCompra.
-7.  Implementar MovimentacaoEstoque e o Factory Method.
+7.  ~~Implementar MovimentacaoEstoque e o Factory Method~~ (branch `feature/movimentacao`, testado no Postman).
 8.  Implementar `ConfirmarRecebimentoCommand`.
 9.  Implementar Devolucao, ItemDevolucao e `ConcluirDevolucaoCommand`.
 10. Implementar e testar integração BrasilAPI.

@@ -1871,6 +1871,491 @@
       ]
     },
     {
+      "name": "04 - Movimentações",
+      "item": [
+        {
+          "name": "Ajuste de entrada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"movimentacaoId\", pm.response.json().id);",
+                  "",
+                  "pm.sendRequest(pm.collectionVariables.get(\"baseUrl\") + \"/api/produtos/\" + pm.collectionVariables.get(\"produtoId\"), function (err, res) {",
+                  "    pm.test(\"Estoque do produto = 10\", function () {",
+                  "        pm.expect(Number(res.json().quantidadeEstoque)).to.eql(10);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": {{produtoId}},\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 10,\n  \"motivo\": \"Inventário inicial\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste de saída",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.sendRequest(pm.collectionVariables.get(\"baseUrl\") + \"/api/produtos/\" + pm.collectionVariables.get(\"produtoId\"), function (err, res) {",
+                  "    pm.test(\"Estoque do produto = 7\", function () {",
+                  "        pm.expect(Number(res.json().quantidadeEstoque)).to.eql(7);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": {{produtoId}},\n  \"tipo\": \"SAIDA\",\n  \"quantidade\": 3,\n  \"motivo\": \"Perda por avaria\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste de saída maior que o estoque (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});",
+                  "",
+                  "pm.sendRequest(pm.collectionVariables.get(\"baseUrl\") + \"/api/produtos/\" + pm.collectionVariables.get(\"produtoId\"), function (err, res) {",
+                  "    pm.test(\"Estoque do produto = 7\", function () {",
+                  "        pm.expect(Number(res.json().quantidadeEstoque)).to.eql(7);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": {{produtoId}},\n  \"tipo\": \"SAIDA\",\n  \"quantidade\": 1000,\n  \"motivo\": \"Teste de estoque insuficiente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste sem motivo (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": {{produtoId}},\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste com tipo inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": {{produtoId}},\n  \"tipo\": \"TRANSFERENCIA\",\n  \"quantidade\": 1,\n  \"motivo\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste com quantidade zero (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": {{produtoId}},\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 0,\n  \"motivo\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste de produto inativo (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": {{produtoInativoId}},\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 1,\n  \"motivo\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste de produto inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "movimentacoes",
+                "ajustes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtoId\": 999999,\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 1,\n  \"motivo\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listar movimentações do produto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Duas movimentações, a mais recente primeiro\", function () {",
+                  "    const lista = pm.response.json();",
+                  "    pm.expect(lista).to.have.lengthOf(2);",
+                  "    pm.expect(lista[0].tipo).to.eql(\"SAIDA\");",
+                  "    pm.expect(lista[1].id).to.eql(pm.collectionVariables.get(\"movimentacaoId\"));",
+                  "    pm.expect(lista[1].origem).to.eql(\"AJUSTE\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{produtoId}}/movimentacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{produtoId}}",
+                "movimentacoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar movimentações de produto inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/999999/movimentacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "999999",
+                "movimentacoes"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "99 - Rotas",
       "item": [
         {
@@ -1949,6 +2434,10 @@
     },
     {
       "key": "associacaoId",
+      "value": ""
+    },
+    {
+      "key": "movimentacaoId",
       "value": ""
     }
   ]
