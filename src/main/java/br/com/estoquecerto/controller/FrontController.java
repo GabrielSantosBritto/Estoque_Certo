@@ -10,6 +10,8 @@ import br.com.estoquecerto.dto.request.FornecedorRequestDTO;
 import br.com.estoquecerto.dto.response.FornecedorResponseDTO;
 import br.com.estoquecerto.dto.request.FornecedorProdutoRequestDTO;
 import br.com.estoquecerto.dto.response.FornecedorProdutoResponseDTO;
+import br.com.estoquecerto.dto.request.AjusteEstoqueRequestDTO;
+import br.com.estoquecerto.dto.response.MovimentacaoResponseDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
@@ -26,6 +28,7 @@ public class FrontController {
     private final ProdutoController produtoController;
     private final FornecedorController fornecedorController;
     private final FornecedorProdutoController fornecedorProdutoController;
+    private final MovimentacaoController movimentacaoController;
     private final ObjectMapper objectMapper;
 
     public FrontController() {
@@ -33,6 +36,7 @@ public class FrontController {
         this.produtoController = new ProdutoController();
         this.fornecedorController = new FornecedorController();
         this.fornecedorProdutoController = new FornecedorProdutoController();
+        this.movimentacaoController = new MovimentacaoController();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -75,6 +79,21 @@ public class FrontController {
                 );
 
                 buscarProdutoPorCodigo(exchange, codigo);
+                return;
+            }
+
+            // Histórico de movimentações de um produto
+            // (precisa vir antes da rota genérica /api/produtos/{id})
+            if (metodo.equals("GET") &&
+                    caminho.startsWith("/api/produtos/") &&
+                    caminho.endsWith("/movimentacoes")) {
+
+                String idTexto = caminho.substring(
+                    "/api/produtos/".length(),
+                    caminho.length() - "/movimentacoes".length()
+                );
+
+                listarMovimentacoesDoProduto(exchange, idTexto);
                 return;
             }
 
@@ -195,6 +214,14 @@ public class FrontController {
                     excluirFornecedorProduto(exchange, idTexto);
                     return;
                 }
+            }
+
+            // Rotas de movimentações de estoque
+            if (metodo.equals("POST") &&
+                    caminho.equals("/api/movimentacoes/ajustes")) {
+
+                registrarAjusteEstoque(exchange);
+                return;
             }
 
             // Rota não encontrada
@@ -501,6 +528,38 @@ public class FrontController {
         enviarJson(exchange, 200, Map.of(
             "mensagem", "Associação excluída com sucesso."
         ));
+    }
+
+    // =========================
+    // MÉTODOS DE MOVIMENTAÇÕES
+    // =========================
+
+    private void registrarAjusteEstoque(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        AjusteEstoqueRequestDTO dto = objectMapper.readValue(
+            exchange.getRequestBody(),
+            AjusteEstoqueRequestDTO.class
+        );
+
+        Long id = movimentacaoController.registrarAjuste(dto);
+
+        enviarJson(exchange, 201, Map.of(
+            "id", id,
+            "mensagem", "Ajuste de estoque registrado com sucesso."
+        ));
+    }
+
+    private void listarMovimentacoesDoProduto(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long produtoId = converterId(idTexto);
+
+        List<MovimentacaoResponseDTO> movimentacoes =
+            movimentacaoController.listarPorProduto(produtoId);
+
+        enviarJson(exchange, 200, movimentacoes);
     }
 
     // =========================
