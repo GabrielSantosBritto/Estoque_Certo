@@ -76,3 +76,52 @@ CREATE TABLE IF NOT EXISTS fornecedor_produto (
     CONSTRAINT fk_fornecedor_produto_produto
         FOREIGN KEY (produto_id) REFERENCES produtos (id)
 ) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------------
+-- Movimentações de estoque (histórico: só INSERT e SELECT)
+--
+-- item_compra_id e item_devolucao_id ainda não têm chave estrangeira
+-- porque as tabelas itens_compra e itens_devolucao pertencem aos módulos
+-- de Compra e Devolução. Quem criar essas tabelas deve acrescentar, logo
+-- abaixo delas:
+--
+--   ALTER TABLE movimentacoes_estoque
+--       ADD CONSTRAINT fk_movimentacoes_item_compra
+--       FOREIGN KEY (item_compra_id) REFERENCES itens_compra (id);
+--
+--   ALTER TABLE movimentacoes_estoque
+--       ADD CONSTRAINT fk_movimentacoes_item_devolucao
+--       FOREIGN KEY (item_devolucao_id) REFERENCES itens_devolucao (id);
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS movimentacoes_estoque (
+    id                 BIGINT         NOT NULL AUTO_INCREMENT,
+    produto_id         BIGINT         NOT NULL,
+    tipo               VARCHAR(10)    NOT NULL,
+    origem             VARCHAR(15)    NOT NULL,
+    quantidade         DECIMAL(12,3)  NOT NULL,
+    data_movimentacao  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    item_compra_id     BIGINT         NULL,
+    item_devolucao_id  BIGINT         NULL,
+    motivo             VARCHAR(255)   NULL,
+
+    CONSTRAINT pk_movimentacoes_estoque PRIMARY KEY (id),
+    CONSTRAINT fk_movimentacoes_produto
+        FOREIGN KEY (produto_id) REFERENCES produtos (id),
+
+    CONSTRAINT ck_movimentacoes_tipo
+        CHECK (tipo IN ('ENTRADA', 'SAIDA')),
+    CONSTRAINT ck_movimentacoes_origem
+        CHECK (origem IN ('COMPRA', 'VENDA', 'DEVOLUCAO', 'AJUSTE')),
+    CONSTRAINT ck_movimentacoes_quantidade
+        CHECK (quantidade > 0),
+
+    -- Cada origem exige o seu vínculo
+    CONSTRAINT ck_movimentacoes_vinculo_compra
+        CHECK (origem <> 'COMPRA' OR item_compra_id IS NOT NULL),
+    CONSTRAINT ck_movimentacoes_vinculo_devolucao
+        CHECK (origem <> 'DEVOLUCAO' OR item_devolucao_id IS NOT NULL),
+    CONSTRAINT ck_movimentacoes_motivo_ajuste
+        CHECK (origem <> 'AJUSTE' OR motivo IS NOT NULL),
+
+    INDEX idx_movimentacoes_produto_data (produto_id, data_movimentacao)
+) ENGINE = InnoDB;

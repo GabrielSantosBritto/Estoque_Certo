@@ -3,6 +3,7 @@ package br.com.estoquecerto.repository;
 import br.com.estoquecerto.infrastructure.database.DatabaseConnection;
 import br.com.estoquecerto.model.entity.Produto;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -255,5 +256,37 @@ public class ProdutoRepository {
             return comando.executeUpdate() > 0;
         }
     }
-}
 
+    /**
+     * Soma a variação (positiva ou negativa) ao estoque do produto, usando
+     * a conexão da transação do Command.
+     *
+     * A condição no WHERE torna a operação atômica: se o resultado ficasse
+     * negativo, nenhuma linha é alterada e o método retorna false. Isso vale
+     * mesmo com duas requisições simultâneas, porque o MySQL bloqueia a
+     * linha durante o UPDATE.
+     *
+     * Este é o ÚNICO ponto do sistema que altera quantidade_estoque, e só
+     * deve ser chamado junto com o registro de uma MovimentacaoEstoque.
+     */
+    public boolean atualizarEstoque(
+            Connection conexao,
+            Long produtoId,
+            BigDecimal variacao) throws SQLException {
+
+        String sql = """
+            UPDATE produtos
+            SET quantidade_estoque = quantidade_estoque + ?
+            WHERE id = ? AND quantidade_estoque + ? >= 0
+            """;
+
+        try (PreparedStatement comando = conexao.prepareStatement(sql)) {
+
+            comando.setBigDecimal(1, variacao);
+            comando.setLong(2, produtoId);
+            comando.setBigDecimal(3, variacao);
+
+            return comando.executeUpdate() > 0;
+        }
+    }
+}
