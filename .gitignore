@@ -36,3 +36,4 @@ desktop.ini
 # (versionar apenas o EstoqueCerto.postman_collection.json)
 postman/*
 !postman/EstoqueCerto.postman_collection.json
+.postman/
