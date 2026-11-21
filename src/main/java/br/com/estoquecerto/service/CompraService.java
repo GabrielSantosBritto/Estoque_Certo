@@ -2,6 +2,7 @@ package br.com.estoquecerto.service;
 
 import br.com.estoquecerto.command.CadastrarCompraCommand;
 import br.com.estoquecerto.command.CancelarCompraCommand;
+import br.com.estoquecerto.command.ConfirmarRecebimentoCommand;
 import br.com.estoquecerto.command.ExecutorTransacional;
 import br.com.estoquecerto.exception.RecursoNaoEncontradoException;
 import br.com.estoquecerto.model.entity.Compra;
@@ -123,6 +124,20 @@ public class CompraService {
         validarId(id, "ID da compra inválido.");
 
         executorTransacional.executar(new CancelarCompraCommand(id));
+    }
+
+    // Confirmar recebimento: dá entrada de todos os itens no estoque.
+    // Retorna quantos itens foram recebidos.
+    public int receber(Long id) throws SQLException {
+
+        validarId(id, "ID da compra inválido.");
+
+        ConfirmarRecebimentoCommand comando =
+            new ConfirmarRecebimentoCommand(id);
+
+        executorTransacional.executar(comando);
+
+        return comando.getItensRecebidos();
     }
 
     // Valida um item e monta o ItemCompra com o produto do banco

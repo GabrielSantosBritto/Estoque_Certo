@@ -71,6 +71,12 @@ public class CompraController {
         compraService.cancelar(id);
     }
 
+    // Confirmar recebimento
+    public int receber(Long id) throws SQLException {
+
+        return compraService.receber(id);
+    }
+
     // Data opcional no formato AAAA-MM-DD
     private LocalDate converterData(String texto) {
 

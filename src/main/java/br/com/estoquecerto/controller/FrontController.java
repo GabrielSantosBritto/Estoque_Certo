@@ -257,6 +257,19 @@ public class FrontController {
                 return;
             }
 
+            if (metodo.equals("POST") &&
+                    caminho.startsWith("/api/compras/") &&
+                    caminho.endsWith("/recebimento")) {
+
+                String idTexto = caminho.substring(
+                    "/api/compras/".length(),
+                    caminho.length() - "/recebimento".length()
+                );
+
+                receberCompra(exchange, idTexto);
+                return;
+            }
+
             if (metodo.equals("GET") &&
                     caminho.startsWith("/api/compras/")) {
 
@@ -659,6 +672,19 @@ public class FrontController {
 
         enviarJson(exchange, 200, Map.of(
             "mensagem", "Compra cancelada com sucesso."
+        ));
+    }
+
+    private void receberCompra(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        int itensRecebidos = compraController.receber(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Recebimento confirmado. Estoque atualizado.",
+            "itensRecebidos", itensRecebidos
         ));
     }
 
