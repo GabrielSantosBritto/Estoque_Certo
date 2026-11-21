@@ -1,6 +1,7 @@
 package br.com.estoquecerto.model.entity;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Produto adquirido dentro de uma compra.
@@ -60,8 +61,9 @@ public class ItemCompra {
         return precoUnitario;
     }
 
-    // Subtotal calculado: quantidade x preço unitário
+    // Subtotal calculado: quantidade x preço unitário, em centavos
     public BigDecimal getSubtotal() {
-        return quantidade.multiply(precoUnitario);
+        return quantidade.multiply(precoUnitario)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 }

@@ -101,7 +101,7 @@ public class Compra {
     public BigDecimal getSubtotalItens() {
         return itens.stream()
                 .map(ItemCompra::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO.setScale(2), BigDecimal::add);
     }
 
     public BigDecimal getTotal() {
