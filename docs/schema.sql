@@ -78,20 +78,66 @@ CREATE TABLE IF NOT EXISTS fornecedor_produto (
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------------
+-- Compras
+-- O total não é armazenado: é calculado a partir dos itens, do frete
+-- e do desconto.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS compras (
+    id              BIGINT         NOT NULL AUTO_INCREMENT,
+    fornecedor_id   BIGINT         NOT NULL,
+    data_compra     DATE           NOT NULL,
+    frete           DECIMAL(12,2)  NOT NULL DEFAULT 0,
+    desconto        DECIMAL(12,2)  NOT NULL DEFAULT 0,
+    status          VARCHAR(10)    NOT NULL DEFAULT 'PENDENTE',
+
+    CONSTRAINT pk_compras PRIMARY KEY (id),
+    CONSTRAINT fk_compras_fornecedor
+        FOREIGN KEY (fornecedor_id) REFERENCES fornecedores (id),
+
+    CONSTRAINT ck_compras_status
+        CHECK (status IN ('PENDENTE', 'RECEBIDA', 'CANCELADA')),
+    CONSTRAINT ck_compras_frete    CHECK (frete >= 0),
+    CONSTRAINT ck_compras_desconto CHECK (desconto >= 0)
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------------
+-- Itens da compra
+-- preco_unitario é o preço de aquisição, diferente do preço de venda.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS itens_compra (
+    id              BIGINT         NOT NULL AUTO_INCREMENT,
+    compra_id       BIGINT         NOT NULL,
+    produto_id      BIGINT         NOT NULL,
+    quantidade      DECIMAL(12,3)  NOT NULL,
+    preco_unitario  DECIMAL(12,2)  NOT NULL,
+
+    CONSTRAINT pk_itens_compra PRIMARY KEY (id),
+    CONSTRAINT fk_itens_compra_compra
+        FOREIGN KEY (compra_id) REFERENCES compras (id),
+    CONSTRAINT fk_itens_compra_produto
+        FOREIGN KEY (produto_id) REFERENCES produtos (id),
+
+    -- O mesmo produto não pode se repetir na mesma compra
+    CONSTRAINT uk_itens_compra_produto UNIQUE (compra_id, produto_id),
+
+    CONSTRAINT ck_itens_compra_quantidade     CHECK (quantidade > 0),
+    CONSTRAINT ck_itens_compra_preco_unitario CHECK (preco_unitario > 0)
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------------
 -- Movimentações de estoque (histórico: só INSERT e SELECT)
 --
--- item_compra_id e item_devolucao_id ainda não têm chave estrangeira
--- porque as tabelas itens_compra e itens_devolucao pertencem aos módulos
--- de Compra e Devolução. Quem criar essas tabelas deve acrescentar, logo
--- abaixo delas:
+-- Esta tabela fica depois das tabelas de itens porque referencia
+-- itens_compra (e, no futuro, itens_devolucao).
 --
---   ALTER TABLE movimentacoes_estoque
---       ADD CONSTRAINT fk_movimentacoes_item_compra
---       FOREIGN KEY (item_compra_id) REFERENCES itens_compra (id);
+-- item_devolucao_id ainda não tem chave estrangeira: a tabela
+-- itens_devolucao pertence ao módulo de Devolução. Quem criá-la deve
+-- colocá-la ANTES desta tabela e acrescentar aqui:
 --
---   ALTER TABLE movimentacoes_estoque
---       ADD CONSTRAINT fk_movimentacoes_item_devolucao
---       FOREIGN KEY (item_devolucao_id) REFERENCES itens_devolucao (id);
+--   CONSTRAINT fk_movimentacoes_item_devolucao
+--       FOREIGN KEY (item_devolucao_id) REFERENCES itens_devolucao (id),
+--
+-- Bancos já criados precisam de um ALTER TABLE único (ver README).
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS movimentacoes_estoque (
     id                 BIGINT         NOT NULL AUTO_INCREMENT,
@@ -107,6 +153,8 @@ CREATE TABLE IF NOT EXISTS movimentacoes_estoque (
     CONSTRAINT pk_movimentacoes_estoque PRIMARY KEY (id),
     CONSTRAINT fk_movimentacoes_produto
         FOREIGN KEY (produto_id) REFERENCES produtos (id),
+    CONSTRAINT fk_movimentacoes_item_compra
+        FOREIGN KEY (item_compra_id) REFERENCES itens_compra (id),
 
     CONSTRAINT ck_movimentacoes_tipo
         CHECK (tipo IN ('ENTRADA', 'SAIDA')),

@@ -191,7 +191,13 @@ padrão 0. - Total calculado, não persistido como atributo. - Compra deve
 possuir ao menos um item. - Só pode ser recebida ou cancelada enquanto
 pendente. - Fornecedor deve estar ativo na criação. - O recebimento gera
 uma movimentação de ENTRADA por item e atualiza o estoque de cada
-produto, tudo em uma única transação.
+produto, tudo em uma única transação. - Cancelamento não movimenta
+estoque. - A data da compra é opcional (padrão: hoje) e não pode estar
+no futuro. - O desconto não pode deixar o total negativo.
+
+**Estado:** implementado e testado no Postman (pasta `05 - Compras`,
+branch `feature/compra`). Cadastro, cancelamento e recebimento são
+Commands executados pelo `ExecutorTransacional`.
 
 ### 4.5 ItemCompra
 
@@ -203,7 +209,13 @@ Representa um produto adquirido dentro de uma compra.
 **Regras:** - Quantidade e preço unitário maiores que zero. - Subtotal
 calculado. - Preço unitário é o preço de aquisição, diferente do preço
 de venda do Produto. - Mesmo produto não pode repetir na mesma compra. -
-Itens só podem ser alterados enquanto a compra estiver pendente.
+Itens só podem ser alterados enquanto a compra estiver pendente. - O
+produto precisa estar ativo e **associado ao fornecedor da compra** em
+`FornecedorProduto`. - Subtotal arredondado a 2 casas decimais.
+
+**Estado:** implementado junto com a Compra. Os itens são informados na
+criação da compra; não há rota para editar itens depois (para corrigir,
+cancela-se a compra e cria-se outra).
 
 ### 4.6 MovimentacaoEstoque
 
@@ -356,6 +368,8 @@ padrão, cada Service repetiria o controle de transação.
 
 -   **Command:** interface `Command` com `void executar(Connection conexao)`.
 -   **Comandos concretos:**
+    -   `CadastrarCompraCommand`: grava a compra e todos os itens.
+    -   `CancelarCompraCommand`: muda a compra pendente para CANCELADA.
     -   `ConfirmarRecebimentoCommand`: muda a compra para RECEBIDA,
         gera uma movimentação de ENTRADA por item e atualiza o estoque.
     -   `ConcluirDevolucaoCommand`: muda a devolução para CONCLUIDA,
@@ -384,7 +398,13 @@ public void executar(Command comando) throws SQLException {
 }
 ```
 
-**Estado:** `Command`, `ExecutorTransacional` e `RegistrarAjusteCommand` implementados. `ConfirmarRecebimentoCommand` e `ConcluirDevolucaoCommand` pendentes (módulos Compra e Devolução).
+**Estado:** `Command`, `ExecutorTransacional`, `RegistrarAjusteCommand`, `CadastrarCompraCommand`, `CancelarCompraCommand` e `ConfirmarRecebimentoCommand` implementados. `ConcluirDevolucaoCommand` pendente (módulo Devolução).
+
+**Os dois padrões juntos:** o `ConfirmarRecebimentoCommand` (Command)
+usa o `GeradorEntradaCompra` (Factory Method) para criar a movimentação
+de cada item. O Command garante que tudo aconteça numa transação; o
+Factory Method garante que cada movimentação seja criada com o tipo, a
+origem e o vínculo corretos.
 
 ### 7.5 Factory Method
 
@@ -638,13 +658,44 @@ geradas pelos Commands de recebimento e de conclusão da devolução.
 A rota de movimentações do produto é verificada antes da rota genérica
 `/api/produtos/{id}`.
 
-### 9.6 Compras e devoluções
+### 9.6 Compras --- implementadas e testadas
 
-As rotas completas serão definidas durante a implementação dos
-respectivos Controllers. Deverão contemplar cadastro, consulta,
-operações permitidas de atualização, gerenciamento de itens,
-recebimento/cancelamento de compra e conclusão/cancelamento de
-devolução.
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/compras` | Cadastra compra com itens (status PENDENTE) |
+| GET | `/api/compras` | Lista compras, mais recente primeiro, com itens e totais |
+| GET | `/api/compras/{id}` | Busca compra com itens e totais |
+| POST | `/api/compras/{id}/recebimento` | Confirma recebimento e dá entrada no estoque |
+| POST | `/api/compras/{id}/cancelamento` | Cancela compra pendente |
+
+Corpo do cadastro (`dataCompra`, `frete` e `desconto` são opcionais):
+
+``` json
+{
+  "fornecedorId": 2,
+  "dataCompra": "2026-11-21",
+  "frete": 15.00,
+  "desconto": 5.00,
+  "itens": [
+    { "produtoId": 1, "quantidade": 2, "precoUnitario": 10.00 },
+    { "produtoId": 3, "quantidade": 3, "precoUnitario": 4.00 }
+  ]
+}
+```
+
+Respostas de erro: `400` para dados inválidos, compra sem itens,
+produto repetido, produto inativo ou não associado ao fornecedor e
+fornecedor inativo; `404` para fornecedor, produto ou compra
+inexistente; `409` para receber ou cancelar uma compra que não está
+PENDENTE.
+
+As rotas de ação (`/recebimento`, `/cancelamento`) são verificadas
+antes da busca por ID.
+
+### 9.7 Devoluções
+
+As rotas serão definidas durante a implementação do módulo de
+Devolução.
 
 ## 10. Banco de dados
 
@@ -653,13 +704,27 @@ Tabelas verificadas no estado atual:
 -   `fornecedores`
 -   `produtos`
 -   `fornecedor_produto`
+-   `compras`
+-   `itens_compra`
 -   `movimentacoes_estoque`
 
-A tabela `movimentacoes_estoque` tem FK para `produtos` e `CHECK` para
-tipo, origem, quantidade positiva e vínculo obrigatório por origem.
-`item_compra_id` e `item_devolucao_id` ficam **sem FK** até que as
-tabelas de itens de compra e de devolução existam; o `schema.sql` traz
-o `ALTER TABLE` que o módulo correspondente deve acrescentar.
+`compras` tem `CHECK` de status e de frete/desconto não negativos.
+`itens_compra` tem `UNIQUE (compra_id, produto_id)` e `CHECK` de
+quantidade e preço positivos.
+
+A tabela `movimentacoes_estoque` tem FK para `produtos` e para
+`itens_compra`, e `CHECK` para tipo, origem, quantidade positiva e
+vínculo obrigatório por origem. Ela fica **depois** das tabelas de
+itens no `schema.sql`, porque as referencia. `item_devolucao_id` fica
+sem FK até a tabela `itens_devolucao` existir.
+
+Bancos criados antes da tabela `itens_compra` precisam, uma única vez:
+
+``` sql
+ALTER TABLE movimentacoes_estoque
+    ADD CONSTRAINT fk_movimentacoes_item_compra
+    FOREIGN KEY (item_compra_id) REFERENCES itens_compra (id);
+```
 
 A tabela `fornecedor_produto` possui: - `id`: PK auto incremento. -
 `fornecedor_id`: FK para `fornecedores(id)`. - `produto_id`: FK para
@@ -694,12 +759,15 @@ src/main/java/br/com/estoquecerto/
 │   ├── ProdutoController.java
 │   ├── FornecedorController.java
 │   ├── FornecedorProdutoController.java
-│   └── MovimentacaoController.java
+│   ├── MovimentacaoController.java
+│   └── CompraController.java
 ├── command/
 │   ├── Command.java
 │   ├── ExecutorTransacional.java
 │   ├── RegistrarAjusteCommand.java
-│   ├── ConfirmarRecebimentoCommand.java        (previsto)
+│   ├── CadastrarCompraCommand.java
+│   ├── CancelarCompraCommand.java
+│   ├── ConfirmarRecebimentoCommand.java
 │   └── ConcluirDevolucaoCommand.java           (previsto)
 ├── dto/
 │   ├── request/
@@ -785,6 +853,8 @@ combinada pela equipe.
 -   Módulo de Movimentação (Factory Method, repositório, atualização
     atômica de estoque, ajuste manual e histórico), compilado e testado
     no Postman.
+-   Módulo de Compra (cadastro com itens, consulta, cancelamento e
+    recebimento com entrada no estoque), compilado e testado no Postman.
 
 ### Próximas atividades
 
@@ -792,10 +862,10 @@ combinada pela equipe.
 2.  ~~Corrigir os códigos HTTP~~ (branch `fix/status-http`).
 3.  Validar CRUD de Produto com MySQL.
 4.  Versionar o script do banco em `docs/schema.sql`.
-5.  Implementar `ExecutorTransacional` e a interface `Command`.
-6.  Implementar Compra e ItemCompra.
+5.  ~~Implementar `ExecutorTransacional` e a interface `Command`~~.
+6.  ~~Implementar Compra e ItemCompra~~ (branch `feature/compra`).
 7.  ~~Implementar MovimentacaoEstoque e o Factory Method~~ (branch `feature/movimentacao`, testado no Postman).
-8.  Implementar `ConfirmarRecebimentoCommand`.
+8.  ~~Implementar `ConfirmarRecebimentoCommand`~~ (branch `feature/compra`).
 9.  Implementar Devolucao, ItemDevolucao e `ConcluirDevolucaoCommand`.
 10. Implementar e testar integração BrasilAPI.
 11. Completar coleção Postman e README final.

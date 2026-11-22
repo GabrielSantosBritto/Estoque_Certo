@@ -12,6 +12,8 @@ import br.com.estoquecerto.dto.request.FornecedorProdutoRequestDTO;
 import br.com.estoquecerto.dto.response.FornecedorProdutoResponseDTO;
 import br.com.estoquecerto.dto.request.AjusteEstoqueRequestDTO;
 import br.com.estoquecerto.dto.response.MovimentacaoResponseDTO;
+import br.com.estoquecerto.dto.request.CompraRequestDTO;
+import br.com.estoquecerto.dto.response.CompraResponseDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
@@ -29,6 +31,7 @@ public class FrontController {
     private final FornecedorController fornecedorController;
     private final FornecedorProdutoController fornecedorProdutoController;
     private final MovimentacaoController movimentacaoController;
+    private final CompraController compraController;
     private final ObjectMapper objectMapper;
 
     public FrontController() {
@@ -37,6 +40,7 @@ public class FrontController {
         this.fornecedorController = new FornecedorController();
         this.fornecedorProdutoController = new FornecedorProdutoController();
         this.movimentacaoController = new MovimentacaoController();
+        this.compraController = new CompraController();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -221,6 +225,59 @@ public class FrontController {
                     caminho.equals("/api/movimentacoes/ajustes")) {
 
                 registrarAjusteEstoque(exchange);
+                return;
+            }
+
+            // Rotas de compras
+            if (metodo.equals("POST") &&
+                    caminho.equals("/api/compras")) {
+
+                cadastrarCompra(exchange);
+                return;
+            }
+
+            if (metodo.equals("GET") &&
+                    caminho.equals("/api/compras")) {
+
+                listarCompras(exchange);
+                return;
+            }
+
+            // Ações sobre uma compra (precisam vir antes da busca por ID)
+            if (metodo.equals("POST") &&
+                    caminho.startsWith("/api/compras/") &&
+                    caminho.endsWith("/cancelamento")) {
+
+                String idTexto = caminho.substring(
+                    "/api/compras/".length(),
+                    caminho.length() - "/cancelamento".length()
+                );
+
+                cancelarCompra(exchange, idTexto);
+                return;
+            }
+
+            if (metodo.equals("POST") &&
+                    caminho.startsWith("/api/compras/") &&
+                    caminho.endsWith("/recebimento")) {
+
+                String idTexto = caminho.substring(
+                    "/api/compras/".length(),
+                    caminho.length() - "/recebimento".length()
+                );
+
+                receberCompra(exchange, idTexto);
+                return;
+            }
+
+            if (metodo.equals("GET") &&
+                    caminho.startsWith("/api/compras/")) {
+
+                String idTexto = caminho.substring(
+                    "/api/compras/".length()
+                );
+
+                buscarCompraPorId(exchange, idTexto);
                 return;
             }
 
@@ -560,6 +617,75 @@ public class FrontController {
             movimentacaoController.listarPorProduto(produtoId);
 
         enviarJson(exchange, 200, movimentacoes);
+    }
+
+    // =========================
+    // MÉTODOS DE COMPRAS
+    // =========================
+
+    private void cadastrarCompra(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        CompraRequestDTO dto = objectMapper.readValue(
+            exchange.getRequestBody(),
+            CompraRequestDTO.class
+        );
+
+        Long id = compraController.cadastrar(dto);
+
+        enviarJson(exchange, 201, Map.of(
+            "id", id,
+            "mensagem", "Compra cadastrada com sucesso."
+        ));
+    }
+
+    private void listarCompras(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        List<CompraResponseDTO> compras = compraController.listarTodos();
+
+        enviarJson(exchange, 200, compras);
+    }
+
+    private void buscarCompraPorId(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        Optional<CompraResponseDTO> compra = compraController.buscarPorId(id);
+
+        if (compra.isPresent()) {
+            enviarJson(exchange, 200, compra.get());
+        } else {
+            enviarJson(exchange, 404, Map.of(
+                "erro", "Compra não encontrada."
+            ));
+        }
+    }
+
+    private void cancelarCompra(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        compraController.cancelar(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Compra cancelada com sucesso."
+        ));
+    }
+
+    private void receberCompra(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        int itensRecebidos = compraController.receber(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Recebimento confirmado. Estoque atualizado.",
+            "itensRecebidos", itensRecebidos
+        ));
     }
 
     // =========================
