@@ -4007,6 +4007,1877 @@
       ]
     },
     {
+      "name": "06 - Devoluções",
+      "item": [
+        {
+          "name": "Preparar: identificar os itens da compra recebida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const compra = pm.response.json();",
+                  "const itemA = compra.itens.find(i => i.produtoId == pm.collectionVariables.get(\"compraProdutoAId\"));",
+                  "const itemB = compra.itens.find(i => i.produtoId == pm.collectionVariables.get(\"compraProdutoBId\"));",
+                  "",
+                  "pm.test(\"Compra está RECEBIDA e tem os itens A e B\", function () {",
+                  "    pm.expect(compra.status).to.eql(\"RECEBIDA\");",
+                  "    pm.expect(itemA).to.not.be.undefined;",
+                  "    pm.expect(itemB).to.not.be.undefined;",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"devItemAId\", itemA.id);",
+                  "pm.collectionVariables.set(\"devItemBId\", itemB.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/compras/{{compraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "compras",
+                "{{compraId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"devolucaoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"descricao\": \"Embalagens rasgadas na entrega\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 },\n    { \"itemCompraId\": {{devItemBId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Buscar devolução por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status da devolução é PENDENTE\", function () {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"PENDENTE\");",
+                  "});",
+                  "",
+                  "pm.test(\"Dados da devolução conferem\", function () {",
+                  "    const d = pm.response.json();",
+                  "    pm.expect(d.compraId).to.eql(pm.collectionVariables.get(\"compraId\"));",
+                  "    pm.expect(d.motivo).to.eql(\"PRODUTO_DANIFICADO\");",
+                  "    pm.expect(d.itens).to.have.lengthOf(2);",
+                  "    const a = d.itens.find(i => i.itemCompraId == pm.collectionVariables.get(\"devItemAId\"));",
+                  "    pm.expect(Number(a.quantidadeComprada)).to.eql(2);",
+                  "    pm.expect(Number(a.quantidade)).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar devoluções",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Lista contém a devolução cadastrada\", function () {",
+                  "    pm.expect(pm.response.json().map(d => d.id)).to.include(pm.collectionVariables.get(\"devolucaoId\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar devoluções da compra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Só devoluções desta compra, incluindo a cadastrada\", function () {",
+                  "    const lista = pm.response.json();",
+                  "    pm.expect(lista.map(d => d.id)).to.include(pm.collectionVariables.get(\"devolucaoId\"));",
+                  "    lista.forEach(d => pm.expect(d.compraId).to.eql(pm.collectionVariables.get(\"compraId\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/compras/{{compraId}}/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "compras",
+                "{{compraId}}",
+                "devolucoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir que cadastrar não mexeu no estoque",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estoque de A continua +2\", function () {",
+                  "    const antes = Number(pm.collectionVariables.get(\"compraEstoqueAAntes\"));",
+                  "    pm.expect(Number(pm.response.json().quantidadeEstoque)).to.eql(antes + 2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoAId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução de compra cancelada (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraCanceladaId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": 1, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução sem itens (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução acima da quantidade comprada (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 3 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com item de outra compra (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": 999999, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com item repetido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 },\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com quantidade zero (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 0 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com motivo inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"CLIENTE_DESISTIU\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução sem motivo (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução OUTROS sem descrição (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"OUTROS\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com data futura (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"dataDevolucao\": \"2999-01-01\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com data inválida (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"dataDevolucao\": \"20/11/2026\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com JSON inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"compraId\": ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução de compra inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": 999999,\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Buscar devolução inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar devoluções de compra inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/compras/999999/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "compras",
+                "999999",
+                "devolucoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Concluir devolução",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Informa os 2 itens devolvidos\", function () {",
+                  "    pm.expect(pm.response.json().itensDevolvidos).to.eql(2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoId}}/conclusao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoId}}",
+                "conclusao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir devolução concluída",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status da devolução é CONCLUIDA\", function () {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"CONCLUIDA\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir estoque do produto A (-1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estoque de A: +2 da compra, -1 da devolução\", function () {",
+                  "    const antes = Number(pm.collectionVariables.get(\"compraEstoqueAAntes\"));",
+                  "    pm.expect(Number(pm.response.json().quantidadeEstoque)).to.eql(antes + 1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoAId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir estoque do produto B (-1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estoque de B: +3 da compra, -1 da devolução\", function () {",
+                  "    const antes = Number(pm.collectionVariables.get(\"compraEstoqueBAntes\"));",
+                  "    pm.expect(Number(pm.response.json().quantidadeEstoque)).to.eql(antes + 2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoBId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoBId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir movimentação de saída do produto A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Movimentação mais recente é a SAIDA da devolução\", function () {",
+                  "    const m = pm.response.json()[0];",
+                  "    pm.expect(m.tipo).to.eql(\"SAIDA\");",
+                  "    pm.expect(m.origem).to.eql(\"DEVOLUCAO\");",
+                  "    pm.expect(Number(m.quantidade)).to.eql(1);",
+                  "    pm.expect(m.itemDevolucaoId).to.not.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}/movimentacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoAId}}",
+                "movimentacoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Concluir a mesma devolução novamente (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoId}}/conclusao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoId}}",
+                "conclusao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar devolução já concluída (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoId}}/cancelamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoId}}",
+                "cancelamento"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir que o estoque não saiu duas vezes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estoque de A continua +1\", function () {",
+                  "    const antes = Number(pm.collectionVariables.get(\"compraEstoqueAAntes\"));",
+                  "    pm.expect(Number(pm.response.json().quantidadeEstoque)).to.eql(antes + 1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoAId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução para cancelar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"devolucaoCanceladaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"OUTROS\",\n  \"descricao\": \"Fornecedor pediu para aguardar a troca\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancelar devolução",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoCanceladaId}}/cancelamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoCanceladaId}}",
+                "cancelamento"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir devolução cancelada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status da devolução é CANCELADA\", function () {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"CANCELADA\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoCanceladaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoCanceladaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Concluir devolução cancelada (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoCanceladaId}}/conclusao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoCanceladaId}}",
+                "conclusao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir que o cancelamento não mexeu no estoque",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estoque de A continua +1\", function () {",
+                  "    const antes = Number(pm.collectionVariables.get(\"compraEstoqueAAntes\"));",
+                  "    pm.expect(Number(pm.response.json().quantidadeEstoque)).to.eql(antes + 1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoAId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cadastrar primeira devolução do restante de A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"devolucaoRestante1Id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cadastrar segunda devolução do restante de A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"devolucaoRestante2Id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_DANIFICADO\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemAId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Concluir a primeira",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoRestante1Id}}/conclusao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoRestante1Id}}",
+                "conclusao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Concluir a segunda: passaria da quantidade comprada (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});",
+                  "",
+                  "pm.test(\"Erro cita a quantidade comprada\", function () {",
+                  "    pm.expect(pm.response.json().erro).to.include(\"quantidade comprada\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoRestante2Id}}/conclusao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoRestante2Id}}",
+                "conclusao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir que a segunda continua pendente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status da devolução é PENDENTE\", function () {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"PENDENTE\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoRestante2Id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoRestante2Id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir estoque final do produto A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estoque de A voltou ao valor de antes da compra\", function () {",
+                  "    const antes = Number(pm.collectionVariables.get(\"compraEstoqueAAntes\"));",
+                  "    pm.expect(Number(pm.response.json().quantidadeEstoque)).to.eql(antes + 0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoAId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preparar: desativar o fornecedor da compra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fornecedores/{{compraFornecedorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fornecedores",
+                "{{compraFornecedorId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cadastrar devolução com fornecedor inativo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"devolucaoFornecedorInativoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compraId\": {{compraId}},\n  \"motivo\": \"PRODUTO_COM_DEFEITO\",\n  \"itens\": [\n    { \"itemCompraId\": {{devItemBId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Concluir devolução com fornecedor inativo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/{{devolucaoFornecedorInativoId}}/conclusao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "{{devolucaoFornecedorInativoId}}",
+                "conclusao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conferir estoque do produto B após devolver com fornecedor inativo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estoque de B: +3 da compra, -2 das devoluções\", function () {",
+                  "    const antes = Number(pm.collectionVariables.get(\"compraEstoqueBAntes\"));",
+                  "    pm.expect(Number(pm.response.json().quantidadeEstoque)).to.eql(antes + 1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/produtos/{{compraProdutoBId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "produtos",
+                "{{compraProdutoBId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Concluir devolução inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/999999/conclusao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "999999",
+                "conclusao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar devolução inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devolucoes/999999/cancelamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devolucoes",
+                "999999",
+                "cancelamento"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "99 - Rotas",
       "item": [
         {
@@ -4133,6 +6004,34 @@
     },
     {
       "key": "compraEstoqueBAntes",
+      "value": ""
+    },
+    {
+      "key": "devItemAId",
+      "value": ""
+    },
+    {
+      "key": "devItemBId",
+      "value": ""
+    },
+    {
+      "key": "devolucaoId",
+      "value": ""
+    },
+    {
+      "key": "devolucaoCanceladaId",
+      "value": ""
+    },
+    {
+      "key": "devolucaoRestante1Id",
+      "value": ""
+    },
+    {
+      "key": "devolucaoRestante2Id",
+      "value": ""
+    },
+    {
+      "key": "devolucaoFornecedorInativoId",
       "value": ""
     }
   ]
