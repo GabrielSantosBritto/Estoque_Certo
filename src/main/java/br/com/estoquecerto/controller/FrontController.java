@@ -1,9 +1,9 @@
-
 package br.com.estoquecerto.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import br.com.estoquecerto.exception.ConflitoException;
 import br.com.estoquecerto.exception.RecursoNaoEncontradoException;
+import br.com.estoquecerto.exception.ServicoExternoIndisponivelException;
 import br.com.estoquecerto.dto.request.ProdutoRequestDTO;
 import br.com.estoquecerto.dto.response.ProdutoResponseDTO;
 import br.com.estoquecerto.dto.request.FornecedorRequestDTO;
@@ -16,6 +16,7 @@ import br.com.estoquecerto.dto.request.CompraRequestDTO;
 import br.com.estoquecerto.dto.response.CompraResponseDTO;
 import br.com.estoquecerto.dto.request.DevolucaoRequestDTO;
 import br.com.estoquecerto.dto.response.DevolucaoResponseDTO;
+import br.com.estoquecerto.dto.response.ConsultaCnpjResponseDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
@@ -35,6 +36,7 @@ public class FrontController {
     private final MovimentacaoController movimentacaoController;
     private final CompraController compraController;
     private final DevolucaoController devolucaoController;
+    private final ConsultaCnpjController consultaCnpjController;
     private final ObjectMapper objectMapper;
 
     public FrontController() {
@@ -45,6 +47,7 @@ public class FrontController {
         this.movimentacaoController = new MovimentacaoController();
         this.compraController = new CompraController();
         this.devolucaoController = new DevolucaoController();
+        this.consultaCnpjController = new ConsultaCnpjController();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -190,6 +193,18 @@ public class FrontController {
                     desativarFornecedor(exchange, idTexto);
                     return;
                 }
+            }
+
+            // Consulta de CNPJ na BrasilAPI
+            if (metodo.equals("GET") &&
+                    caminho.startsWith("/api/cnpj/")) {
+
+                String cnpj = caminho.substring(
+                    "/api/cnpj/".length()
+                );
+
+                consultarCnpj(exchange, cnpj);
+                return;
             }
 
             // Rotas de associações fornecedor-produto
@@ -382,22 +397,28 @@ public class FrontController {
                 "erro", e.getMessage()
             ));
 
+        } catch (ServicoExternoIndisponivelException e) {
+
+            enviarJson(exchange, 503, Map.of(
+                "erro", e.getMessage()
+            ));
+
         } catch (SQLException e) {
 
-    e.printStackTrace();
+            e.printStackTrace();
 
-    enviarJson(exchange, 500, Map.of(
-        "erro", "Erro ao acessar o banco de dados."
-    ));
+            enviarJson(exchange, 500, Map.of(
+                "erro", "Erro ao acessar o banco de dados."
+            ));
 
         } catch (Exception e) {
 
-    e.printStackTrace();
+            e.printStackTrace();
 
-    enviarJson(exchange, 500, Map.of(
-        "erro", "Erro interno do servidor."
-    ));
-}
+            enviarJson(exchange, 500, Map.of(
+                "erro", "Erro interno do servidor."
+            ));
+        }
     }
 
     // =========================
@@ -584,6 +605,20 @@ public class FrontController {
         enviarJson(exchange, 200, Map.of(
             "mensagem", "Fornecedor desativado com sucesso."
         ));
+    }
+
+    // =========================
+    // MÉTODOS DE CONSULTA CNPJ
+    // =========================
+
+    private void consultarCnpj(
+            HttpExchange exchange,
+            String cnpj) throws IOException {
+
+        ConsultaCnpjResponseDTO resposta =
+            consultaCnpjController.consultar(cnpj);
+
+        enviarJson(exchange, 200, resposta);
     }
 
     // =========================
@@ -874,4 +909,4 @@ public class FrontController {
             throw new IllegalArgumentException("ID inválido.");
         }
     }
-}
+}

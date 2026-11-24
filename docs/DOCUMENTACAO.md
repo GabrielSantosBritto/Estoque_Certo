@@ -3,15 +3,15 @@
 > Documento de referência do projeto. Atualizar este arquivo conforme as
 > funcionalidades forem implementadas e testadas.
 
--   **Linguagem:** Java 26
--   **Build:** Maven
--   **Banco:** MySQL 8
--   **Persistência:** JDBC
--   **JSON:** Jackson
--   **Servidor HTTP:** `com.sun.net.httpserver.HttpServer`
--   **Testes de API:** Postman
--   **Versionamento:** Git e GitHub
--   **API externa prevista:** BrasilAPI (consulta de CNPJ)
+- **Linguagem:** Java 26
+- **Build:** Maven
+- **Banco:** MySQL 8
+- **Persistência:** JDBC
+- **JSON:** Jackson
+- **Servidor HTTP:** `com.sun.net.httpserver.HttpServer`
+- **Testes de API:** Postman
+- **Versionamento:** Git e GitHub
+- **API externa prevista:** BrasilAPI (consulta de CNPJ)
 
 ## 1. Objetivo e escopo
 
@@ -26,13 +26,13 @@ Hibernate/JPA.
 
 ### Objetivos
 
--   Cadastrar e consultar fornecedores e produtos.
--   Relacionar fornecedores aos produtos que podem fornecer.
--   Registrar compras e seus itens.
--   Controlar o recebimento e a entrada de mercadorias no estoque.
--   Registrar movimentações de estoque.
--   Registrar devoluções ao fornecedor.
--   Disponibilizar operações por API HTTP.
+- Cadastrar e consultar fornecedores e produtos.
+- Relacionar fornecedores aos produtos que podem fornecer.
+- Registrar compras e seus itens.
+- Controlar o recebimento e a entrada de mercadorias no estoque.
+- Registrar movimentações de estoque.
+- Registrar devoluções ao fornecedor.
+- Disponibilizar operações por API HTTP.
 
 ### Decisão de escopo (17/11)
 
@@ -47,17 +47,19 @@ requisito de consumo de API externa.
 
 ## 2. Tecnologias
 
-  Tecnologia       Uso
-  ---------------- ------------------------------------
-  Java 26          Linguagem principal
-  Maven            Build e dependências
-  MySQL 8          Banco relacional
-  JDBC             Acesso SQL com `PreparedStatement`
-  Jackson          Conversão JSON
-  JDK HttpServer   Servidor HTTP
-  Postman          Testes da API
-  Git/GitHub       Versionamento e colaboração
-  BrasilAPI        Consulta externa de CNPJ
+Tecnologia Uso
+
+---
+
+Java 26 Linguagem principal
+Maven Build e dependências
+MySQL 8 Banco relacional
+JDBC Acesso SQL com `PreparedStatement`
+Jackson Conversão JSON
+JDK HttpServer Servidor HTTP
+Postman Testes da API
+Git/GitHub Versionamento e colaboração
+BrasilAPI Consulta externa de CNPJ
 
 A conexão com o banco utiliza as variáveis de ambiente `DB_URL`,
 `DB_USER` e `DB_PASSWORD`. Credenciais não devem ser versionadas.
@@ -66,7 +68,7 @@ A conexão com o banco utiliza as variáveis de ambiente `DB_URL`,
 
 Fluxo de uma requisição:
 
-``` text
+```text
 Cliente HTTP / Postman
         |
    ServidorHttp
@@ -82,18 +84,20 @@ Cliente HTTP / Postman
       MySQL
 ```
 
-  Camada                      Responsabilidade
-  --------------------------- ---------------------------------------------------
-  `infrastructure/http`       Inicializar o servidor HTTP
-  `controller`                Interpretar requisições e produzir respostas HTTP
-  `dto/request`               Dados recebidos em JSON
-  `dto/response`              Dados devolvidos em JSON
-  `service`                   Regras e validações de negócio
-  `repository`                Consultas e persistência JDBC
-  `model/entity`              Entidades do domínio
-  `model/enums`               Valores enumerados do domínio
-  `mapper`                    Conversão entre DTOs e entidades
-  `infrastructure/database`   Obtenção de conexões
+Camada Responsabilidade
+
+---
+
+`infrastructure/http` Inicializar o servidor HTTP
+`controller` Interpretar requisições e produzir respostas HTTP
+`dto/request` Dados recebidos em JSON
+`dto/response` Dados devolvidos em JSON
+`service` Regras e validações de negócio
+`repository` Consultas e persistência JDBC
+`model/entity` Entidades do domínio
+`model/enums` Valores enumerados do domínio
+`mapper` Conversão entre DTOs e entidades
+`infrastructure/database` Obtenção de conexões
 
 ### Tratamento de erros e códigos HTTP
 
@@ -101,15 +105,16 @@ O `FrontController` centraliza o tratamento de exceções. Os Services
 **não conhecem HTTP**: lançam a exceção que descreve o problema, e o
 FrontController a traduz no código de status.
 
-| Situação | Exceção lançada | Status |
-|---|---|---|
-| Operação bem-sucedida | --- | `200 OK` |
-| Recurso criado | --- | `201 Created` |
-| JSON vazio, malformado ou com campo desconhecido | `JsonProcessingException` | `400 Bad Request` |
-| Dado inválido ou regra de negócio violada | `IllegalArgumentException` | `400 Bad Request` |
-| Recurso inexistente | `RecursoNaoEncontradoException` | `404 Not Found` |
-| Duplicidade ou estado incompatível | `ConflitoException` | `409 Conflict` |
-| Falha no banco ou erro inesperado | `SQLException` / outras | `500 Internal Server Error` |
+| Situação                                         | Exceção lançada                       | Status                      |
+| ------------------------------------------------ | ------------------------------------- | --------------------------- |
+| Operação bem-sucedida                            | ---                                   | `200 OK`                    |
+| Recurso criado                                   | ---                                   | `201 Created`               |
+| JSON vazio, malformado ou com campo desconhecido | `JsonProcessingException`             | `400 Bad Request`           |
+| Dado inválido ou regra de negócio violada        | `IllegalArgumentException`            | `400 Bad Request`           |
+| Recurso inexistente                              | `RecursoNaoEncontradoException`       | `404 Not Found`             |
+| Duplicidade ou estado incompatível               | `ConflitoException`                   | `409 Conflict`              |
+| Falha no banco ou erro inesperado                | `SQLException` / outras               | `500 Internal Server Error` |
+| Serviço externo indisponível ou timeout          | `ServicoExternoIndisponivelException` | `503 Service Unavailable`   |
 
 As exceções próprias ficam no pacote `exception`. Ao implementar um
 módulo novo, usar sempre essas exceções em vez de criar respostas HTTP
@@ -151,9 +156,10 @@ inicial igual a zero. - Produto começa ativo. - Atualização cadastral
 não altera diretamente o estoque. - Exclusão lógica por
 `ativo = false`. - Entradas e saídas devem ocorrer pelos fluxos de
 movimentação.
+
 - `quantidadeEstoque` só é alterada junto com o registro de uma
-`MovimentacaoEstoque`, **na mesma transação**. Nenhuma rota altera o
-estoque diretamente.
+  `MovimentacaoEstoque`, **na mesma transação**. Nenhuma rota altera o
+  estoque diretamente.
 
 **Unidades previstas:** `UN`, `KG`, `L`, `M`, `CX`, `PCT`.
 
@@ -264,7 +270,7 @@ compra que já aconteceu.
 `PRODUTO_COM_DEFEITO`, `PRODUTO_INCORRETO`, `QUANTIDADE_EXCEDENTE`,
 `PRODUTO_VENCIDO`, `OUTROS`.
 
-**Estado:** implementado e testado no Postman (pasta `06 - Devoluções`,
+**Estado:** implementado e testado no Postman (pasta `07 - Devoluções`,
 branch `feature/devolucao`). Cadastro, conclusão e cancelamento são
 Commands executados pelo `ExecutorTransacional`.
 
@@ -292,26 +298,28 @@ da quantidade comprada.
 
 ## 5. Relacionamentos
 
-  Origem        Destino               Cardinalidade
-  ------------- --------------------- ---------------
-  Fornecedor    FornecedorProduto     1:N
-  Produto       FornecedorProduto     1:N
-  Fornecedor    Compra                1:N
-  Compra        ItemCompra            1:N
-  Produto       ItemCompra            1:N
-  Produto       MovimentacaoEstoque   1:N
-  ItemCompra    MovimentacaoEstoque   1:N (opcional)
-  Compra        Devolucao             1:N
-  Devolucao     ItemDevolucao         1:N
-  ItemCompra    ItemDevolucao         1:N
-  ItemDevolucao MovimentacaoEstoque   1:N (opcional)
+Origem Destino Cardinalidade
+
+---
+
+Fornecedor FornecedorProduto 1:N
+Produto FornecedorProduto 1:N
+Fornecedor Compra 1:N
+Compra ItemCompra 1:N
+Produto ItemCompra 1:N
+Produto MovimentacaoEstoque 1:N
+ItemCompra MovimentacaoEstoque 1:N (opcional)
+Compra Devolucao 1:N
+Devolucao ItemDevolucao 1:N
+ItemCompra ItemDevolucao 1:N
+ItemDevolucao MovimentacaoEstoque 1:N (opcional)
 
 O relacionamento N:N entre Fornecedor e Produto é resolvido pela
 entidade associativa `FornecedorProduto`.
 
 Representação simplificada:
 
-``` text
+```text
 Fornecedor 1 --- N FornecedorProduto N --- 1 Produto
 
 Fornecedor 1 --- N Compra
@@ -329,7 +337,7 @@ ItemCompra 1 --- N ItemDevolucao
 **RequestDTO:** representa os dados recebidos pelo endpoint. Exemplo de
 associação:
 
-``` json
+```json
 {
   "fornecedorId": 2,
   "produtoId": 1
@@ -339,7 +347,7 @@ associação:
 **ResponseDTO:** representa os dados devolvidos, sem expor toda a
 entidade. Exemplo previsto:
 
-``` json
+```json
 {
   "id": 1,
   "fornecedorId": 2,
@@ -390,26 +398,26 @@ padrão, cada Service repetiria o controle de transação.
 
 **Estrutura:**
 
--   **Command:** interface `Command` com `void executar(Connection conexao)`.
--   **Comandos concretos:**
-    -   `CadastrarCompraCommand`: grava a compra e todos os itens.
-    -   `CancelarCompraCommand`: muda a compra pendente para CANCELADA.
-    -   `CadastrarDevolucaoCommand`: grava a devolução e todos os itens.
-    -   `CancelarDevolucaoCommand`: muda a devolução pendente para CANCELADA.
-    -   `ConfirmarRecebimentoCommand`: muda a compra para RECEBIDA,
-        gera uma movimentação de ENTRADA por item e atualiza o estoque.
-    -   `ConcluirDevolucaoCommand`: muda a devolução para CONCLUIDA,
-        gera uma movimentação de SAIDA por item e baixa o estoque.
-    -   `RegistrarAjusteCommand`: registra uma movimentação de AJUSTE
-        (entrada ou saída, com motivo) e atualiza o estoque.
--   **Invoker:** `ExecutorTransacional`. Abre a conexão, desliga o
-    auto-commit, executa o comando e faz `commit`, ou `rollback` em
-    caso de erro.
+- **Command:** interface `Command` com `void executar(Connection conexao)`.
+- **Comandos concretos:**
+  - `CadastrarCompraCommand`: grava a compra e todos os itens.
+  - `CancelarCompraCommand`: muda a compra pendente para CANCELADA.
+  - `CadastrarDevolucaoCommand`: grava a devolução e todos os itens.
+  - `CancelarDevolucaoCommand`: muda a devolução pendente para CANCELADA.
+  - `ConfirmarRecebimentoCommand`: muda a compra para RECEBIDA,
+    gera uma movimentação de ENTRADA por item e atualiza o estoque.
+  - `ConcluirDevolucaoCommand`: muda a devolução para CONCLUIDA,
+    gera uma movimentação de SAIDA por item e baixa o estoque.
+  - `RegistrarAjusteCommand`: registra uma movimentação de AJUSTE
+    (entrada ou saída, com motivo) e atualiza o estoque.
+- **Invoker:** `ExecutorTransacional`. Abre a conexão, desliga o
+  auto-commit, executa o comando e faz `commit`, ou `rollback` em
+  caso de erro.
 
 O controle de transação fica escrito em um único lugar, e uma nova
 operação composta é só um novo Command.
 
-``` java
+```java
 public void executar(Command comando) throws SQLException {
     try (Connection conexao = DatabaseConnection.getConnection()) {
         conexao.setAutoCommit(false);
@@ -441,21 +449,21 @@ de criação (tipo, vínculo e validações). O padrão permite acrescentar
 origens novas, como VENDA, sem alterar as existentes.
 
 **Atenção:** uma classe única com um método estático `criar(tipo,
-origem)` é uma *Simple Factory*, e **não** o Factory Method do GoF. No
+origem)` é uma _Simple Factory_, e **não** o Factory Method do GoF. No
 Factory Method, uma classe criadora abstrata declara o método de criação
 e as **subclasses decidem** qual objeto criar.
 
 **Estrutura:**
 
--   **Creator:** classe abstrata `GeradorMovimentacao`, com o factory
-    method `criarMovimentacao(...)` e a operação comum `registrar(...)`
-    (valida a quantidade e usa o objeto criado).
--   **Concrete Creators:** `GeradorEntradaCompra` (ENTRADA/COMPRA),
-    `GeradorSaidaDevolucao` (SAIDA/DEVOLUCAO) e `GeradorAjuste`
-    (AJUSTE, exige motivo).
--   **Product:** `MovimentacaoEstoque`.
+- **Creator:** classe abstrata `GeradorMovimentacao`, com o factory
+  method `criarMovimentacao(...)` e a operação comum `registrar(...)`
+  (valida a quantidade e usa o objeto criado).
+- **Concrete Creators:** `GeradorEntradaCompra` (ENTRADA/COMPRA),
+  `GeradorSaidaDevolucao` (SAIDA/DEVOLUCAO) e `GeradorAjuste`
+  (AJUSTE, exige motivo).
+- **Product:** `MovimentacaoEstoque`.
 
-``` java
+```java
 public abstract class GeradorMovimentacao {
 
     protected abstract MovimentacaoEstoque criarMovimentacao(
@@ -484,18 +492,18 @@ renomeadas nem alteradas sem combinar com a equipe.
 
 **Já implementado (branch `feature/contrato-transacao`):**
 
-| Classe | Papel |
-|---|---|
-| `command/Command` | Interface `executar(Connection)` |
-| `command/ExecutorTransacional` | Abre a transação, executa, faz commit ou rollback |
-| `factory/GeradorMovimentacao` | Creator abstrato com `registrar(produto, quantidade)` |
-| `model/entity/MovimentacaoEstoque` | Entidade da movimentação |
-| `model/enums/TipoMovimentacao` | `ENTRADA`, `SAIDA` |
-| `model/enums/OrigemMovimentacao` | `COMPRA`, `VENDA`, `DEVOLUCAO`, `AJUSTE` |
+| Classe                             | Papel                                                 |
+| ---------------------------------- | ----------------------------------------------------- |
+| `command/Command`                  | Interface `executar(Connection)`                      |
+| `command/ExecutorTransacional`     | Abre a transação, executa, faz commit ou rollback     |
+| `factory/GeradorMovimentacao`      | Creator abstrato com `registrar(produto, quantidade)` |
+| `model/entity/MovimentacaoEstoque` | Entidade da movimentação                              |
+| `model/enums/TipoMovimentacao`     | `ENTRADA`, `SAIDA`                                    |
+| `model/enums/OrigemMovimentacao`   | `COMPRA`, `VENDA`, `DEVOLUCAO`, `AJUSTE`              |
 
 **Módulo Movimentação — implementado (branch `feature/movimentacao`):**
 
-``` java
+```java
 // factory/ — subclasses de GeradorMovimentacao
 new GeradorEntradaCompra(Long itemCompraId)
 new GeradorSaidaDevolucao(Long itemDevolucaoId)
@@ -514,7 +522,7 @@ boolean atualizarEstoque(Connection conexao, Long produtoId, BigDecimal variacao
 Sugestão de SQL para `atualizarEstoque`, que impede estoque negativo
 mesmo com requisições simultâneas:
 
-``` sql
+```sql
 UPDATE produtos
 SET quantidade_estoque = quantidade_estoque + ?
 WHERE id = ? AND quantidade_estoque + ? >= 0
@@ -522,7 +530,7 @@ WHERE id = ? AND quantidade_estoque + ? >= 0
 
 **Como um Command usa o contrato** (exemplo do recebimento de compra):
 
-``` java
+```java
 public void executar(Connection conexao) throws SQLException {
     // ... valida e muda a compra para RECEBIDA usando "conexao"
 
@@ -563,7 +571,7 @@ fornecedor sem uma operação explícita do usuário.
 
 ### Organização sugerida
 
-``` text
+```text
 infrastructure/
 └── external/
     └── BrasilApiClient.java
@@ -571,16 +579,16 @@ infrastructure/
 
 ### Tratamento de falhas
 
--   CNPJ inválido ou não encontrado.
--   Timeout ou indisponibilidade da API.
--   Resposta JSON inesperada.
--   Erros HTTP externos.
+- CNPJ inválido ou não encontrado.
+- Timeout ou indisponibilidade da API.
+- Resposta JSON inesperada.
+- Erros HTTP externos.
 
 A indisponibilidade da BrasilAPI não deve expor detalhes internos nem
 impedir necessariamente o cadastro manual conforme as regras locais.
 
-**Estado:** integração planejada. Cliente HTTP, endpoint exato,
-mapeamento de resposta e teste isolado ainda precisam ser implementados
+**Estado:** implementado e testado no Postman através da rota `GET /api/cnpj/{cnpj}` na branch `feature/brasilapi`.
+Cliente HTTP, endpoint exato, mapeamento de resposta e teste isolado ainda precisam ser implementados
 e confirmados na documentação oficial da BrasilAPI. Não assumir campos
 ou contrato externo antes dessa verificação.
 
@@ -591,81 +599,95 @@ consideradas implementadas até estarem no FrontController e testadas.
 
 ### 9.1 Status
 
-  Método   Rota            Descrição                         Estado
-  -------- --------------- --------------------------------- --------------
-  GET      `/api/status`   Verifica disponibilidade da API   Implementada
+Método Rota Descrição Estado
+
+---
+
+GET `/api/status` Verifica disponibilidade da API Implementada
 
 ### 9.2 Produtos
 
-  ---------------------------------------------------------------------------------------
-  Método            Rota                              Descrição         Estado
-  ----------------- --------------------------------- ----------------- -----------------
-  POST              `/api/produtos`                   Cadastra produto  Código existente
+---
 
-  GET               `/api/produtos`                   Lista produtos    Código existente
+Método Rota Descrição Estado
 
-  GET               `/api/produtos/codigo/{codigo}`   Busca por código  Código existente
+---
 
-  GET               `/api/produtos/{id}`              Busca por ID      Código existente
+POST `/api/produtos` Cadastra produto Código existente
 
-  PUT               `/api/produtos/{id}`              Atualiza produto  Código existente
+GET `/api/produtos` Lista produtos Código existente
 
-  DELETE            `/api/produtos/{id}`              Desativa produto  Código existente
-  ---------------------------------------------------------------------------------------
+GET `/api/produtos/codigo/{codigo}` Busca por código Código existente
+
+GET `/api/produtos/{id}` Busca por ID Código existente
+
+PUT `/api/produtos/{id}` Atualiza produto Código existente
+
+DELETE `/api/produtos/{id}` Desativa produto Código existente
+
+---
 
 ### 9.3 Fornecedores
 
-  ---------------------------------------------------------------------------------------
-  Método            Rota                              Descrição         Estado
-  ----------------- --------------------------------- ----------------- -----------------
-  POST              `/api/fornecedores`               Cadastra          Implementada e
-                                                      fornecedor        testada
+---
 
-  GET               `/api/fornecedores`               Lista             Implementada e
-                                                      fornecedores      testada
+Método Rota Descrição Estado
 
-  GET               `/api/fornecedores/cnpj/{cnpj}`   Busca por CNPJ    Implementada e
-                                                                        testada
+---
 
-  GET               `/api/fornecedores/{id}`          Busca por ID      Implementada e
-                                                                        testada
+POST `/api/fornecedores` Cadastra Implementada e
+fornecedor testada
 
-  PUT               `/api/fornecedores/{id}`          Atualiza          Implementada e
-                                                      fornecedor        testada
+GET `/api/fornecedores` Lista Implementada e
+fornecedores testada
 
-  DELETE            `/api/fornecedores/{id}`          Desativa          Código existente;
-                                                      fornecedor        teste pendente
-  ---------------------------------------------------------------------------------------
+GET `/api/fornecedores/cnpj/{cnpj}` Busca por CNPJ Implementada e
+testada
+
+GET `/api/fornecedores/{id}` Busca por ID Implementada e
+testada
+
+PUT `/api/fornecedores/{id}` Atualiza Implementada e
+fornecedor testada
+
+DELETE `/api/fornecedores/{id}` Desativa Código existente;
+fornecedor teste pendente
+
+---
 
 A rota por CNPJ deve ser verificada antes da rota genérica por ID.
 
 ### 9.4 FornecedorProduto --- implementadas, testes pendentes
 
-  ---------------------------------------------------------------------------------------------
-  Método                  Rota                                          Descrição
-  ----------------------- --------------------------------------------- -----------------------
-  POST                    `/api/fornecedores-produtos`                  Cria associação
+---
 
-  GET                     `/api/fornecedores-produtos`                  Lista associações
+Método Rota Descrição
 
-  GET                     `/api/fornecedores-produtos/{id}`             Busca associação por ID
+---
 
-  GET                     `/api/fornecedores/{fornecedorId}/produtos`   Lista produtos do
-                                                                        fornecedor
+POST `/api/fornecedores-produtos` Cria associação
 
-  DELETE                  `/api/fornecedores-produtos/{id}`             Exclui associação
-  ---------------------------------------------------------------------------------------------
+GET `/api/fornecedores-produtos` Lista associações
+
+GET `/api/fornecedores-produtos/{id}` Busca associação por ID
+
+GET `/api/fornecedores/{fornecedorId}/produtos` Lista produtos do
+fornecedor
+
+DELETE `/api/fornecedores-produtos/{id}` Exclui associação
+
+---
 
 ### 9.5 Movimentações --- implementadas e testadas
 
-| Método | Rota | Descrição |
-|---|---|---|
-| POST | `/api/movimentacoes/ajustes` | Registra ajuste manual de estoque |
-| GET | `/api/produtos/{id}/movimentacoes` | Histórico do produto (mais recente primeiro) |
+| Método | Rota                               | Descrição                                    |
+| ------ | ---------------------------------- | -------------------------------------------- |
+| POST   | `/api/movimentacoes/ajustes`       | Registra ajuste manual de estoque            |
+| GET    | `/api/produtos/{id}/movimentacoes` | Histórico do produto (mais recente primeiro) |
 
 Corpo do ajuste:
 
-``` json
+```json
 {
   "produtoId": 1,
   "tipo": "SAIDA",
@@ -686,25 +708,25 @@ A rota de movimentações do produto é verificada antes da rota genérica
 
 ### 9.6 Compras --- implementadas e testadas
 
-| Método | Rota | Descrição |
-|---|---|---|
-| POST | `/api/compras` | Cadastra compra com itens (status PENDENTE) |
-| GET | `/api/compras` | Lista compras, mais recente primeiro, com itens e totais |
-| GET | `/api/compras/{id}` | Busca compra com itens e totais |
-| POST | `/api/compras/{id}/recebimento` | Confirma recebimento e dá entrada no estoque |
-| POST | `/api/compras/{id}/cancelamento` | Cancela compra pendente |
+| Método | Rota                             | Descrição                                                |
+| ------ | -------------------------------- | -------------------------------------------------------- |
+| POST   | `/api/compras`                   | Cadastra compra com itens (status PENDENTE)              |
+| GET    | `/api/compras`                   | Lista compras, mais recente primeiro, com itens e totais |
+| GET    | `/api/compras/{id}`              | Busca compra com itens e totais                          |
+| POST   | `/api/compras/{id}/recebimento`  | Confirma recebimento e dá entrada no estoque             |
+| POST   | `/api/compras/{id}/cancelamento` | Cancela compra pendente                                  |
 
 Corpo do cadastro (`dataCompra`, `frete` e `desconto` são opcionais):
 
-``` json
+```json
 {
   "fornecedorId": 2,
   "dataCompra": "2026-11-21",
-  "frete": 15.00,
-  "desconto": 5.00,
+  "frete": 15.0,
+  "desconto": 5.0,
   "itens": [
-    { "produtoId": 1, "quantidade": 2, "precoUnitario": 10.00 },
-    { "produtoId": 3, "quantidade": 3, "precoUnitario": 4.00 }
+    { "produtoId": 1, "quantidade": 2, "precoUnitario": 10.0 },
+    { "produtoId": 3, "quantidade": 3, "precoUnitario": 4.0 }
   ]
 }
 ```
@@ -761,14 +783,14 @@ compra por ID.
 
 Tabelas verificadas no estado atual:
 
--   `fornecedores`
--   `produtos`
--   `fornecedor_produto`
--   `compras`
--   `itens_compra`
--   `devolucoes`
--   `itens_devolucao`
--   `movimentacoes_estoque`
+- `fornecedores`
+- `produtos`
+- `fornecedor_produto`
+- `compras`
+- `itens_compra`
+- `devolucoes`
+- `itens_devolucao`
+- `movimentacoes_estoque`
 
 `compras` tem `CHECK` de status e de frete/desconto não negativos.
 `itens_compra` tem `UNIQUE (compra_id, produto_id)` e `CHECK` de
@@ -787,7 +809,7 @@ Bancos que já existiam precisam, uma única vez, rodar o `schema.sql`
 (cria as tabelas que faltam) e depois o `ALTER TABLE` correspondente,
 porque `CREATE TABLE IF NOT EXISTS` não altera uma tabela existente:
 
-``` sql
+```sql
 -- Bancos criados antes da tabela itens_compra:
 ALTER TABLE movimentacoes_estoque
     ADD CONSTRAINT fk_movimentacoes_item_compra
@@ -808,22 +830,22 @@ A tabela `produtos` foi alinhada ao código Java com `preco_venda` e
 
 ### Regras de persistência
 
--   Usar `PreparedStatement`.
--   Fechar recursos com `try-with-resources`.
--   Não concatenar valores de usuário diretamente em SQL.
--   Utilizar transações em operações com várias gravações relacionadas.
--   Métodos de Repository usados dentro de uma transação devem
-    **receber a `Connection` como parâmetro**, em vez de abrir a
-    própria. Caso contrário, o `rollback` não desfaz o que eles gravaram.
--   Preservar o histórico de compras, devoluções e movimentações.
--   Não usar exclusão em cascata sem decisão explícita de domínio.
+- Usar `PreparedStatement`.
+- Fechar recursos com `try-with-resources`.
+- Não concatenar valores de usuário diretamente em SQL.
+- Utilizar transações em operações com várias gravações relacionadas.
+- Métodos de Repository usados dentro de uma transação devem
+  **receber a `Connection` como parâmetro**, em vez de abrir a
+  própria. Caso contrário, o `rollback` não desfaz o que eles gravaram.
+- Preservar o histórico de compras, devoluções e movimentações.
+- Não usar exclusão em cascata sem decisão explícita de domínio.
 
 ## 11. Estrutura de diretórios
 
 Estrutura de referência; arquivos futuros serão adicionados conforme a
 implementação:
 
-``` text
+```text
 src/main/java/br/com/estoquecerto/
 ├── EstoqueCertoApplication.java
 ├── controller/
@@ -875,7 +897,7 @@ src/main/java/br/com/estoquecerto/
 
 ### Compilação
 
-``` powershell
+```powershell
 mvn clean compile
 ```
 
@@ -917,22 +939,22 @@ combinada pela equipe.
 
 ### Concluído ou existente
 
--   Estrutura Maven e servidor HTTP.
--   Front Controller.
--   Conexão JDBC com MySQL.
--   Módulo de fornecedores com operações principais testadas.
--   Código do módulo de produtos.
--   Ajuste da tabela `produtos` para `preco_venda` e `ativo`.
--   Módulo `FornecedorProduto` completo (Service, Controller e rotas),
-    compilado; testes no Postman pendentes.
--   Tabela `fornecedor_produto` com FKs e restrição de unicidade.
--   Módulo de Movimentação (Factory Method, repositório, atualização
-    atômica de estoque, ajuste manual e histórico), compilado e testado
-    no Postman.
--   Módulo de Compra (cadastro com itens, consulta, cancelamento e
-    recebimento com entrada no estoque), compilado e testado no Postman.
--   Módulo de Devolução (cadastro com itens, consulta, cancelamento e
-    conclusão com saída do estoque), compilado e testado no Postman.
+- Estrutura Maven e servidor HTTP.
+- Front Controller.
+- Conexão JDBC com MySQL.
+- Módulo de fornecedores com operações principais testadas.
+- Código do módulo de produtos.
+- Ajuste da tabela `produtos` para `preco_venda` e `ativo`.
+- Módulo `FornecedorProduto` completo (Service, Controller e rotas),
+  compilado; testes no Postman pendentes.
+- Tabela `fornecedor_produto` com FKs e restrição de unicidade.
+- Módulo de Movimentação (Factory Method, repositório, atualização
+  atômica de estoque, ajuste manual e histórico), compilado e testado
+  no Postman.
+- Módulo de Compra (cadastro com itens, consulta, cancelamento e
+  recebimento com entrada no estoque), compilado e testado no Postman.
+- Módulo de Devolução (cadastro com itens, consulta, cancelamento e
+  conclusão com saída do estoque), compilado e testado no Postman.
 
 ### Próximas atividades
 
@@ -948,13 +970,13 @@ combinada pela equipe.
 10. Implementar e testar integração BrasilAPI.
 11. Completar coleção Postman e README final.
 
-------------------------------------------------------------------------
+---
 
 ## 15. Evoluções futuras (fora do escopo atual)
 
--   Controle de estoque por lote (`LoteEstoque`) com baixa FIFO.
--   Vendas (origem `VENDA` em `MovimentacaoEstoque`, nova subclasse de
-    `GeradorMovimentacao`).
+- Controle de estoque por lote (`LoteEstoque`) com baixa FIFO.
+- Vendas (origem `VENDA` em `MovimentacaoEstoque`, nova subclasse de
+  `GeradorMovimentacao`).
 
 ## 16. Manutenção deste documento
 

@@ -33,13 +33,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "status"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "status"]
             }
           }
         }
@@ -94,13 +89,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             },
             "body": {
               "mode": "raw",
@@ -142,13 +132,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             },
             "body": {
               "mode": "raw",
@@ -205,13 +190,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             },
             "body": {
               "mode": "raw",
@@ -253,13 +233,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             },
             "body": {
               "mode": "raw",
@@ -297,13 +272,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             }
           }
         },
@@ -333,14 +303,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/{{fornecedorId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "{{fornecedorId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "{{fornecedorId}}"]
             }
           }
         },
@@ -369,15 +333,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/cnpj/{{cnpj}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "cnpj",
-                "{{cnpj}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "cnpj", "{{cnpj}}"]
             }
           }
         },
@@ -405,14 +362,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "999999"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "999999"]
             }
           }
         },
@@ -440,14 +391,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/abc",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "abc"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "abc"]
             }
           }
         },
@@ -476,14 +421,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/{{fornecedorId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "{{fornecedorId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "{{fornecedorId}}"]
             },
             "body": {
               "mode": "raw",
@@ -520,14 +459,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/{{fornecedorId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "{{fornecedorId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "{{fornecedorId}}"]
             }
           }
         },
@@ -560,14 +493,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "999999"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "999999"]
             },
             "body": {
               "mode": "raw",
@@ -622,13 +549,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             },
             "body": {
               "mode": "raw",
@@ -661,14 +583,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/{{fornecedorInativoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "{{fornecedorInativoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "{{fornecedorInativoId}}"]
             }
           }
         },
@@ -696,14 +612,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/{{fornecedorInativoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "{{fornecedorInativoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "{{fornecedorInativoId}}"]
             }
           }
         },
@@ -731,14 +641,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "999999"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "999999"]
             }
           }
         }
@@ -774,13 +678,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -825,14 +724,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{produtoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{produtoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{produtoId}}"]
             }
           }
         },
@@ -861,15 +754,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/codigo/{{produtoCodigo}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "codigo",
-                "{{produtoCodigo}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "codigo", "{{produtoCodigo}}"]
             }
           }
         },
@@ -898,13 +784,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             }
           }
         },
@@ -937,13 +818,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -985,13 +861,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1033,13 +904,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1081,13 +947,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1124,14 +985,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "999999"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "999999"]
             }
           }
         },
@@ -1160,14 +1015,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{produtoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{produtoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{produtoId}}"]
             },
             "body": {
               "mode": "raw",
@@ -1206,14 +1055,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{produtoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{produtoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{produtoId}}"]
             }
           }
         },
@@ -1246,14 +1089,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "999999"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "999999"]
             },
             "body": {
               "mode": "raw",
@@ -1293,13 +1130,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1332,14 +1164,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{produtoInativoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{produtoInativoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{produtoInativoId}}"]
             }
           }
         },
@@ -1367,14 +1193,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{produtoInativoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{produtoInativoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{produtoInativoId}}"]
             }
           }
         }
@@ -1410,13 +1230,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1458,13 +1273,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1506,13 +1316,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1554,13 +1359,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1602,13 +1402,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             },
             "body": {
               "mode": "raw",
@@ -1648,14 +1443,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos/{{associacaoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos",
-                "{{associacaoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos", "{{associacaoId}}"]
             }
           }
         },
@@ -1684,13 +1473,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             }
           }
         },
@@ -1719,15 +1503,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/{{fornecedorId}}/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "{{fornecedorId}}",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "{{fornecedorId}}", "produtos"]
             }
           }
         },
@@ -1755,15 +1532,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores/999999/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores",
-                "999999",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores", "999999", "produtos"]
             }
           }
         },
@@ -1787,14 +1557,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos/{{associacaoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos",
-                "{{associacaoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos", "{{associacaoId}}"]
             }
           }
         },
@@ -1822,14 +1586,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos/{{associacaoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos",
-                "{{associacaoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos", "{{associacaoId}}"]
             }
           }
         },
@@ -1857,14 +1615,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos/{{associacaoId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos",
-                "{{associacaoId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos", "{{associacaoId}}"]
             }
           }
         }
@@ -1906,14 +1658,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -1957,14 +1703,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -2012,14 +1752,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -2061,14 +1795,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -2110,14 +1838,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -2159,14 +1881,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -2208,14 +1924,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -2257,14 +1967,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/movimentacoes/ajustes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "movimentacoes",
-                "ajustes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movimentacoes", "ajustes"]
             },
             "body": {
               "mode": "raw",
@@ -2305,15 +2009,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{produtoId}}/movimentacoes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{produtoId}}",
-                "movimentacoes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{produtoId}}", "movimentacoes"]
             }
           }
         },
@@ -2341,15 +2038,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/999999/movimentacoes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "999999",
-                "movimentacoes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "999999", "movimentacoes"]
             }
           }
         }
@@ -2399,13 +2089,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             },
             "body": {
               "mode": "raw",
@@ -2459,13 +2144,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores"]
             },
             "body": {
               "mode": "raw",
@@ -2505,13 +2185,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -2551,13 +2226,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -2597,13 +2267,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos"]
             },
             "body": {
               "mode": "raw",
@@ -2641,13 +2306,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             },
             "body": {
               "mode": "raw",
@@ -2685,13 +2345,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/fornecedores-produtos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "fornecedores-produtos"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fornecedores-produtos"]
             },
             "body": {
               "mode": "raw",
@@ -2731,13 +2386,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -2782,14 +2432,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "{{compraId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "{{compraId}}"]
             }
           }
         },
@@ -2818,13 +2462,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             }
           }
         },
@@ -2857,13 +2496,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -2905,13 +2539,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -2953,13 +2582,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3001,13 +2625,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3049,13 +2668,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3097,13 +2711,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3145,13 +2754,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3193,13 +2797,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3241,13 +2840,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3289,13 +2883,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3337,13 +2926,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3380,14 +2964,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "999999"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "999999"]
             }
           }
         },
@@ -3413,14 +2991,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{compraProdutoAId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{compraProdutoAId}}"]
             }
           }
         },
@@ -3446,14 +3018,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{compraProdutoBId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{compraProdutoBId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{compraProdutoBId}}"]
             }
           }
         },
@@ -3481,15 +3047,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraId}}/recebimento",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "{{compraId}}",
-                "recebimento"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "{{compraId}}", "recebimento"]
             }
           }
         },
@@ -3517,14 +3076,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "{{compraId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "{{compraId}}"]
             }
           }
         },
@@ -3553,14 +3106,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{compraProdutoAId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{compraProdutoAId}}"]
             }
           }
         },
@@ -3589,14 +3136,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{compraProdutoBId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{compraProdutoBId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{compraProdutoBId}}"]
             }
           }
         },
@@ -3627,9 +3168,7 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}/movimentacoes",
-              "host": [
-                "{{baseUrl}}"
-              ],
+              "host": ["{{baseUrl}}"],
               "path": [
                 "api",
                 "produtos",
@@ -3663,15 +3202,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraId}}/recebimento",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "{{compraId}}",
-                "recebimento"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "{{compraId}}", "recebimento"]
             }
           }
         },
@@ -3700,14 +3232,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{compraProdutoAId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{compraProdutoAId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{compraProdutoAId}}"]
             }
           }
         },
@@ -3735,15 +3261,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraId}}/cancelamento",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "{{compraId}}",
-                "cancelamento"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "{{compraId}}", "cancelamento"]
             }
           }
         },
@@ -3774,13 +3293,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/compras",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras"]
             },
             "body": {
               "mode": "raw",
@@ -3813,9 +3327,7 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraCanceladaId}}/cancelamento",
-              "host": [
-                "{{baseUrl}}"
-              ],
+              "host": ["{{baseUrl}}"],
               "path": [
                 "api",
                 "compras",
@@ -3849,14 +3361,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraCanceladaId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "{{compraCanceladaId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "{{compraCanceladaId}}"]
             }
           }
         },
@@ -3884,15 +3390,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/{{compraCanceladaId}}/recebimento",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "{{compraCanceladaId}}",
-                "recebimento"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "{{compraCanceladaId}}", "recebimento"]
             }
           }
         },
@@ -3921,14 +3420,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/produtos/{{compraProdutoBId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "produtos",
-                "{{compraProdutoBId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "produtos", "{{compraProdutoBId}}"]
             }
           }
         },
@@ -3956,15 +3449,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/999999/cancelamento",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "999999",
-                "cancelamento"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "999999", "cancelamento"]
             }
           }
         },
@@ -3992,22 +3478,139 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/compras/999999/recebimento",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "compras",
-                "999999",
-                "recebimento"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "compras", "999999", "recebimento"]
             }
           }
         }
       ]
     },
     {
-      "name": "06 - Devoluções",
+      "name": "06 - Consulta CNPJ",
+      "item": [
+        {
+          "name": "Consultar CNPJ válido (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna os dados do CNPJ\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.cnpj).to.eql(\"00000000000191\");",
+                  "    pm.expect(res).to.have.property(\"razaoSocial\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cnpj/00000000000191",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cnpj", "00000000000191"]
+            }
+          }
+        },
+        {
+          "name": "Consultar CNPJ com pontuação/formatação (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Remove formatação e consulta com sucesso\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.cnpj).to.eql(\"00000000000191\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cnpj/00.000.000/0001-91",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cnpj", "00.000.000/0001-91"]
+            }
+          }
+        },
+        {
+          "name": "Consultar CNPJ com formato inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cnpj/12345",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cnpj", "12345"]
+            }
+          }
+        },
+        {
+          "name": "Consultar CNPJ inválido ou inexistente (400/404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 ou 404 (CNPJ inválido ou não encontrado)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta tem mensagem de erro\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"erro\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cnpj/99999999999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cnpj", "99999999999999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Devoluções",
       "item": [
         {
           "name": "Preparar: identificar os itens da compra recebida",
@@ -5904,13 +5507,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/rota-que-nao-existe",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "rota-que-nao-existe"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rota-que-nao-existe"]
             }
           }
         }
