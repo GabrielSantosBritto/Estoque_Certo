@@ -14,6 +14,8 @@ import br.com.estoquecerto.dto.request.AjusteEstoqueRequestDTO;
 import br.com.estoquecerto.dto.response.MovimentacaoResponseDTO;
 import br.com.estoquecerto.dto.request.CompraRequestDTO;
 import br.com.estoquecerto.dto.response.CompraResponseDTO;
+import br.com.estoquecerto.dto.request.DevolucaoRequestDTO;
+import br.com.estoquecerto.dto.response.DevolucaoResponseDTO;
 import br.com.estoquecerto.dto.response.ConsultaCnpjResponseDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +35,7 @@ public class FrontController {
     private final FornecedorProdutoController fornecedorProdutoController;
     private final MovimentacaoController movimentacaoController;
     private final CompraController compraController;
+    private final DevolucaoController devolucaoController;
     private final ConsultaCnpjController consultaCnpjController;
     private final ObjectMapper objectMapper;
 
@@ -43,6 +46,7 @@ public class FrontController {
         this.fornecedorProdutoController = new FornecedorProdutoController();
         this.movimentacaoController = new MovimentacaoController();
         this.compraController = new CompraController();
+        this.devolucaoController = new DevolucaoController();
         this.consultaCnpjController = new ConsultaCnpjController();
         this.objectMapper = new ObjectMapper();
     }
@@ -285,6 +289,20 @@ public class FrontController {
                 return;
             }
 
+            // Devoluções de uma compra (antes da busca de compra por ID)
+            if (metodo.equals("GET") &&
+                    caminho.startsWith("/api/compras/") &&
+                    caminho.endsWith("/devolucoes")) {
+
+                String idTexto = caminho.substring(
+                    "/api/compras/".length(),
+                    caminho.length() - "/devolucoes".length()
+                );
+
+                listarDevolucoesDaCompra(exchange, idTexto);
+                return;
+            }
+
             if (metodo.equals("GET") &&
                     caminho.startsWith("/api/compras/")) {
 
@@ -293,6 +311,59 @@ public class FrontController {
                 );
 
                 buscarCompraPorId(exchange, idTexto);
+                return;
+            }
+
+            // Rotas de devoluções
+            if (metodo.equals("POST") &&
+                    caminho.equals("/api/devolucoes")) {
+
+                cadastrarDevolucao(exchange);
+                return;
+            }
+
+            if (metodo.equals("GET") &&
+                    caminho.equals("/api/devolucoes")) {
+
+                listarDevolucoes(exchange);
+                return;
+            }
+
+            // Ações sobre uma devolução (precisam vir antes da busca por ID)
+            if (metodo.equals("POST") &&
+                    caminho.startsWith("/api/devolucoes/") &&
+                    caminho.endsWith("/conclusao")) {
+
+                String idTexto = caminho.substring(
+                    "/api/devolucoes/".length(),
+                    caminho.length() - "/conclusao".length()
+                );
+
+                concluirDevolucao(exchange, idTexto);
+                return;
+            }
+
+            if (metodo.equals("POST") &&
+                    caminho.startsWith("/api/devolucoes/") &&
+                    caminho.endsWith("/cancelamento")) {
+
+                String idTexto = caminho.substring(
+                    "/api/devolucoes/".length(),
+                    caminho.length() - "/cancelamento".length()
+                );
+
+                cancelarDevolucao(exchange, idTexto);
+                return;
+            }
+
+            if (metodo.equals("GET") &&
+                    caminho.startsWith("/api/devolucoes/")) {
+
+                String idTexto = caminho.substring(
+                    "/api/devolucoes/".length()
+                );
+
+                buscarDevolucaoPorId(exchange, idTexto);
                 return;
             }
 
@@ -724,6 +795,89 @@ public class FrontController {
     }
 
     // =========================
+    // MÉTODOS DE DEVOLUÇÕES
+    // =========================
+
+    private void cadastrarDevolucao(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        DevolucaoRequestDTO dto = objectMapper.readValue(
+            exchange.getRequestBody(),
+            DevolucaoRequestDTO.class
+        );
+
+        Long id = devolucaoController.cadastrar(dto);
+
+        enviarJson(exchange, 201, Map.of(
+            "id", id,
+            "mensagem", "Devolução cadastrada com sucesso."
+        ));
+    }
+
+    private void listarDevolucoes(HttpExchange exchange)
+            throws IOException, SQLException {
+
+        List<DevolucaoResponseDTO> devolucoes =
+            devolucaoController.listarTodos();
+
+        enviarJson(exchange, 200, devolucoes);
+    }
+
+    private void listarDevolucoesDaCompra(
+            HttpExchange exchange,
+            String idTexto) throws IOException, SQLException {
+
+        Long compraId = converterId(idTexto);
+
+        List<DevolucaoResponseDTO> devolucoes =
+            devolucaoController.listarPorCompra(compraId);
+
+        enviarJson(exchange, 200, devolucoes);
+    }
+
+    private void buscarDevolucaoPorId(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        Optional<DevolucaoResponseDTO> devolucao =
+            devolucaoController.buscarPorId(id);
+
+        if (devolucao.isPresent()) {
+            enviarJson(exchange, 200, devolucao.get());
+        } else {
+            enviarJson(exchange, 404, Map.of(
+                "erro", "Devolução não encontrada."
+            ));
+        }
+    }
+
+    private void concluirDevolucao(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        int itensDevolvidos = devolucaoController.concluir(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Devolução concluída. Estoque atualizado.",
+            "itensDevolvidos", itensDevolvidos
+        ));
+    }
+
+    private void cancelarDevolucao(HttpExchange exchange, String idTexto)
+            throws IOException, SQLException {
+
+        Long id = converterId(idTexto);
+
+        devolucaoController.cancelar(id);
+
+        enviarJson(exchange, 200, Map.of(
+            "mensagem", "Devolução cancelada com sucesso."
+        ));
+    }
+
+    // =========================
     // MÉTODO DE RESPOSTA JSON
     // =========================
 
@@ -755,4 +909,4 @@ public class FrontController {
             throw new IllegalArgumentException("ID inválido.");
         }
     }
-}
+}

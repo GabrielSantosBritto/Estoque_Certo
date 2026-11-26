@@ -125,19 +125,62 @@ CREATE TABLE IF NOT EXISTS itens_compra (
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------------
+-- Devoluções ao fornecedor
+-- Só compras RECEBIDAS podem ter devolução. O estoque só é baixado
+-- quando a devolução é CONCLUIDA.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS devolucoes (
+    id              BIGINT         NOT NULL AUTO_INCREMENT,
+    compra_id       BIGINT         NOT NULL,
+    data_devolucao  DATE           NOT NULL,
+    motivo          VARCHAR(30)    NOT NULL,
+    descricao       VARCHAR(500)   NULL,
+    status          VARCHAR(10)    NOT NULL DEFAULT 'PENDENTE',
+
+    CONSTRAINT pk_devolucoes PRIMARY KEY (id),
+    CONSTRAINT fk_devolucoes_compra
+        FOREIGN KEY (compra_id) REFERENCES compras (id),
+
+    CONSTRAINT ck_devolucoes_status
+        CHECK (status IN ('PENDENTE', 'CONCLUIDA', 'CANCELADA')),
+    CONSTRAINT ck_devolucoes_motivo
+        CHECK (motivo IN ('PRODUTO_DANIFICADO', 'PRODUTO_COM_DEFEITO',
+                          'PRODUTO_INCORRETO', 'QUANTIDADE_EXCEDENTE',
+                          'PRODUTO_VENCIDO', 'OUTROS')),
+    CONSTRAINT ck_devolucoes_descricao_outros
+        CHECK (motivo <> 'OUTROS' OR descricao IS NOT NULL)
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------------
+-- Itens da devolução
+-- Cada linha aponta para o item da compra que está sendo devolvido.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS itens_devolucao (
+    id              BIGINT         NOT NULL AUTO_INCREMENT,
+    devolucao_id    BIGINT         NOT NULL,
+    item_compra_id  BIGINT         NOT NULL,
+    quantidade      DECIMAL(12,3)  NOT NULL,
+
+    CONSTRAINT pk_itens_devolucao PRIMARY KEY (id),
+    CONSTRAINT fk_itens_devolucao_devolucao
+        FOREIGN KEY (devolucao_id) REFERENCES devolucoes (id),
+    CONSTRAINT fk_itens_devolucao_item_compra
+        FOREIGN KEY (item_compra_id) REFERENCES itens_compra (id),
+
+    -- O mesmo item da compra não pode se repetir na mesma devolução
+    CONSTRAINT uk_itens_devolucao_item UNIQUE (devolucao_id, item_compra_id),
+
+    CONSTRAINT ck_itens_devolucao_quantidade CHECK (quantidade > 0)
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------------
 -- Movimentações de estoque (histórico: só INSERT e SELECT)
 --
 -- Esta tabela fica depois das tabelas de itens porque referencia
--- itens_compra (e, no futuro, itens_devolucao).
+-- itens_compra e itens_devolucao.
 --
--- item_devolucao_id ainda não tem chave estrangeira: a tabela
--- itens_devolucao pertence ao módulo de Devolução. Quem criá-la deve
--- colocá-la ANTES desta tabela e acrescentar aqui:
---
---   CONSTRAINT fk_movimentacoes_item_devolucao
---       FOREIGN KEY (item_devolucao_id) REFERENCES itens_devolucao (id),
---
--- Bancos já criados precisam de um ALTER TABLE único (ver README).
+-- Bancos criados antes dessas tabelas precisam, uma única vez, dos
+-- ALTER TABLE da seção 10 do DOCUMENTACAO.md.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS movimentacoes_estoque (
     id                 BIGINT         NOT NULL AUTO_INCREMENT,
@@ -155,6 +198,8 @@ CREATE TABLE IF NOT EXISTS movimentacoes_estoque (
         FOREIGN KEY (produto_id) REFERENCES produtos (id),
     CONSTRAINT fk_movimentacoes_item_compra
         FOREIGN KEY (item_compra_id) REFERENCES itens_compra (id),
+    CONSTRAINT fk_movimentacoes_item_devolucao
+        FOREIGN KEY (item_devolucao_id) REFERENCES itens_devolucao (id),
 
     CONSTRAINT ck_movimentacoes_tipo
         CHECK (tipo IN ('ENTRADA', 'SAIDA')),

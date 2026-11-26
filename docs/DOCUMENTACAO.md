@@ -256,7 +256,23 @@ Representa uma devolução ao fornecedor vinculada a uma compra.
 **Regras:** - Status inicial `PENDENTE`. - Deve possuir pelo menos um
 item. - Só pode ser concluída ou cancelada enquanto pendente. -
 Conclusão gera movimentações de saída. - Cancelamento não altera
-estoque. - Conclusão deve ser transacional.
+estoque. - Conclusão deve ser transacional. - Só compras `RECEBIDA`
+aceitam devolução (409 caso contrário). - A data é opcional (padrão:
+hoje), não pode estar no futuro nem ser anterior à data da compra. -
+`descricao` é obrigatória quando o motivo é `OUTROS` (até 500
+caracteres).
+- Fornecedor inativo **pode** receber devolução, e produto inativo
+**pode** ser devolvido. As restrições de cadastro inativo valem para
+operações novas (compra, associação, ajuste); a devolução resolve uma
+compra que já aconteceu.
+
+**Motivos (`MotivoDevolucao`):** `PRODUTO_DANIFICADO`,
+`PRODUTO_COM_DEFEITO`, `PRODUTO_INCORRETO`, `QUANTIDADE_EXCEDENTE`,
+`PRODUTO_VENCIDO`, `OUTROS`.
+
+**Estado:** implementado e testado no Postman (pasta `07 - Devoluções`,
+branch `feature/devolucao`). Cadastro, conclusão e cancelamento são
+Commands executados pelo `ExecutorTransacional`.
 
 ### 4.8 ItemDevolucao
 
@@ -270,7 +286,15 @@ Representa a quantidade de um item comprado que será devolvida.
 devoluções concluídas) não pode ultrapassar a quantidade comprada. - Na
 conclusão, a quantidade não pode ser maior que o estoque atual do
 produto. - Conclusão da devolução gera a movimentação de saída
-correspondente.
+correspondente. - O mesmo item da compra não pode se repetir na mesma
+devolução.
+
+A soma devolvida é conferida duas vezes: no cadastro (400, como aviso
+antecipado) e na conclusão (409), que é a conferência definitiva. Na
+conclusão, as linhas dos itens da compra ficam bloqueadas
+(`SELECT ... FOR UPDATE`) até o fim da transação, para que duas
+devoluções do mesmo item concluídas ao mesmo tempo não passem juntas
+da quantidade comprada.
 
 ## 5. Relacionamentos
 
@@ -378,6 +402,8 @@ padrão, cada Service repetiria o controle de transação.
 - **Comandos concretos:**
   - `CadastrarCompraCommand`: grava a compra e todos os itens.
   - `CancelarCompraCommand`: muda a compra pendente para CANCELADA.
+  - `CadastrarDevolucaoCommand`: grava a devolução e todos os itens.
+  - `CancelarDevolucaoCommand`: muda a devolução pendente para CANCELADA.
   - `ConfirmarRecebimentoCommand`: muda a compra para RECEBIDA,
     gera uma movimentação de ENTRADA por item e atualiza o estoque.
   - `ConcluirDevolucaoCommand`: muda a devolução para CONCLUIDA,
@@ -406,7 +432,7 @@ public void executar(Command comando) throws SQLException {
 }
 ```
 
-**Estado:** `Command`, `ExecutorTransacional`, `RegistrarAjusteCommand`, `CadastrarCompraCommand`, `CancelarCompraCommand` e `ConfirmarRecebimentoCommand` implementados. `ConcluirDevolucaoCommand` pendente (módulo Devolução).
+**Estado:** `Command`, `ExecutorTransacional`, `RegistrarAjusteCommand`, `CadastrarCompraCommand`, `CancelarCompraCommand`, `ConfirmarRecebimentoCommand`, `CadastrarDevolucaoCommand`, `CancelarDevolucaoCommand` e `ConcluirDevolucaoCommand` implementados.
 
 **Os dois padrões juntos:** o `ConfirmarRecebimentoCommand` (Command)
 usa o `GeradorEntradaCompra` (Factory Method) para criar a movimentação
@@ -714,10 +740,44 @@ PENDENTE.
 As rotas de ação (`/recebimento`, `/cancelamento`) são verificadas
 antes da busca por ID.
 
-### 9.7 Devoluções
+### 9.7 Devoluções --- implementadas e testadas
 
-As rotas serão definidas durante a implementação do módulo de
-Devolução.
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/devolucoes` | Cadastra devolução com itens (status PENDENTE) |
+| GET | `/api/devolucoes` | Lista devoluções, mais recente primeiro, com itens |
+| GET | `/api/devolucoes/{id}` | Busca devolução com itens |
+| GET | `/api/compras/{id}/devolucoes` | Lista as devoluções de uma compra |
+| POST | `/api/devolucoes/{id}/conclusao` | Conclui e dá saída no estoque |
+| POST | `/api/devolucoes/{id}/cancelamento` | Cancela devolução pendente |
+
+Corpo do cadastro (`dataDevolucao` e `descricao` são opcionais;
+`descricao` é obrigatória com o motivo `OUTROS`). Os itens apontam para
+o `id` do item da compra, que aparece em `GET /api/compras/{id}`:
+
+``` json
+{
+  "compraId": 1,
+  "dataDevolucao": "2026-11-22",
+  "motivo": "PRODUTO_DANIFICADO",
+  "descricao": "Embalagens rasgadas na entrega",
+  "itens": [
+    { "itemCompraId": 1, "quantidade": 1 },
+    { "itemCompraId": 2, "quantidade": 1 }
+  ]
+}
+```
+
+Respostas de erro: `400` para dados inválidos, devolução sem itens,
+item repetido, item de outra compra, motivo inválido, `OUTROS` sem
+descrição e quantidade acima da comprada; `404` para compra ou
+devolução inexistente; `409` para devolver compra não `RECEBIDA`, para
+concluir ou cancelar devolução que não está PENDENTE, para estoque
+insuficiente e quando a conclusão passaria da quantidade comprada.
+
+As rotas de ação (`/conclusao`, `/cancelamento`) são verificadas antes
+da busca por ID, e `/api/compras/{id}/devolucoes` antes da busca de
+compra por ID.
 
 ## 10. Banco de dados
 
@@ -728,24 +788,37 @@ Tabelas verificadas no estado atual:
 - `fornecedor_produto`
 - `compras`
 - `itens_compra`
+- `devolucoes`
+- `itens_devolucao`
 - `movimentacoes_estoque`
 
 `compras` tem `CHECK` de status e de frete/desconto não negativos.
 `itens_compra` tem `UNIQUE (compra_id, produto_id)` e `CHECK` de
 quantidade e preço positivos.
+`devolucoes` tem FK para `compras` e `CHECK` de status, de motivo e de
+descrição obrigatória para `OUTROS`. `itens_devolucao` tem FK para
+`devolucoes` e `itens_compra`, `UNIQUE (devolucao_id, item_compra_id)`
+e `CHECK` de quantidade positiva.
 
-A tabela `movimentacoes_estoque` tem FK para `produtos` e para
-`itens_compra`, e `CHECK` para tipo, origem, quantidade positiva e
+A tabela `movimentacoes_estoque` tem FK para `produtos`, `itens_compra`
+e `itens_devolucao`, e `CHECK` para tipo, origem, quantidade positiva e
 vínculo obrigatório por origem. Ela fica **depois** das tabelas de
-itens no `schema.sql`, porque as referencia. `item_devolucao_id` fica
-sem FK até a tabela `itens_devolucao` existir.
+itens no `schema.sql`, porque as referencia.
 
-Bancos criados antes da tabela `itens_compra` precisam, uma única vez:
+Bancos que já existiam precisam, uma única vez, rodar o `schema.sql`
+(cria as tabelas que faltam) e depois o `ALTER TABLE` correspondente,
+porque `CREATE TABLE IF NOT EXISTS` não altera uma tabela existente:
 
 ```sql
+-- Bancos criados antes da tabela itens_compra:
 ALTER TABLE movimentacoes_estoque
     ADD CONSTRAINT fk_movimentacoes_item_compra
     FOREIGN KEY (item_compra_id) REFERENCES itens_compra (id);
+
+-- Bancos criados antes da tabela itens_devolucao:
+ALTER TABLE movimentacoes_estoque
+    ADD CONSTRAINT fk_movimentacoes_item_devolucao
+    FOREIGN KEY (item_devolucao_id) REFERENCES itens_devolucao (id);
 ```
 
 A tabela `fornecedor_produto` possui: - `id`: PK auto incremento. -
@@ -782,7 +855,8 @@ src/main/java/br/com/estoquecerto/
 │   ├── FornecedorController.java
 │   ├── FornecedorProdutoController.java
 │   ├── MovimentacaoController.java
-│   └── CompraController.java
+│   ├── CompraController.java
+│   └── DevolucaoController.java
 ├── command/
 │   ├── Command.java
 │   ├── ExecutorTransacional.java
@@ -790,7 +864,9 @@ src/main/java/br/com/estoquecerto/
 │   ├── CadastrarCompraCommand.java
 │   ├── CancelarCompraCommand.java
 │   ├── ConfirmarRecebimentoCommand.java
-│   └── ConcluirDevolucaoCommand.java           (previsto)
+│   ├── CadastrarDevolucaoCommand.java
+│   ├── CancelarDevolucaoCommand.java
+│   └── ConcluirDevolucaoCommand.java
 ├── dto/
 │   ├── request/
 │   └── response/
@@ -877,6 +953,8 @@ combinada pela equipe.
   no Postman.
 - Módulo de Compra (cadastro com itens, consulta, cancelamento e
   recebimento com entrada no estoque), compilado e testado no Postman.
+- Módulo de Devolução (cadastro com itens, consulta, cancelamento e
+  conclusão com saída do estoque), compilado e testado no Postman.
 
 ### Próximas atividades
 
@@ -888,7 +966,7 @@ combinada pela equipe.
 6.  ~~Implementar Compra e ItemCompra~~ (branch `feature/compra`).
 7.  ~~Implementar MovimentacaoEstoque e o Factory Method~~ (branch `feature/movimentacao`, testado no Postman).
 8.  ~~Implementar `ConfirmarRecebimentoCommand`~~ (branch `feature/compra`).
-9.  Implementar Devolucao, ItemDevolucao e `ConcluirDevolucaoCommand`.
+9.  ~~Implementar Devolucao, ItemDevolucao e `ConcluirDevolucaoCommand`~~ (branch `feature/devolucao`).
 10. Implementar e testar integração BrasilAPI.
 11. Completar coleção Postman e README final.
 
