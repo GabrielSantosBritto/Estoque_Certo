@@ -3,15 +3,15 @@
 > Documento de referência do projeto. Atualizar este arquivo conforme as
 > funcionalidades forem implementadas e testadas.
 
-- **Linguagem:** Java 26
+- **Linguagem:** Java 21 (compila também em versões mais novas)
 - **Build:** Maven
 - **Banco:** MySQL 8
 - **Persistência:** JDBC
 - **JSON:** Jackson
 - **Servidor HTTP:** `com.sun.net.httpserver.HttpServer`
-- **Testes de API:** Postman
+- **Testes de API:** Postman / Newman
 - **Versionamento:** Git e GitHub
-- **API externa prevista:** BrasilAPI (consulta de CNPJ)
+- **API externa:** BrasilAPI (consulta de CNPJ)
 
 ## 1. Objetivo e escopo
 
@@ -47,19 +47,18 @@ requisito de consumo de API externa.
 
 ## 2. Tecnologias
 
-Tecnologia Uso
-
----
-
-Java 26 Linguagem principal
-Maven Build e dependências
-MySQL 8 Banco relacional
-JDBC Acesso SQL com `PreparedStatement`
-Jackson Conversão JSON
-JDK HttpServer Servidor HTTP
-Postman Testes da API
-Git/GitHub Versionamento e colaboração
-BrasilAPI Consulta externa de CNPJ
+| Tecnologia | Uso |
+|---|---|
+| Java 21 (ou superior) | Linguagem principal |
+| Maven | Build e dependências |
+| MySQL 8 | Banco relacional |
+| JDBC | Acesso SQL com `PreparedStatement` |
+| Jackson | Conversão JSON |
+| JDK HttpServer | Servidor HTTP |
+| `java.net.http.HttpClient` | Cliente HTTP da integração com a BrasilAPI |
+| Postman / Newman | Testes da API |
+| Git/GitHub | Versionamento e colaboração |
+| BrasilAPI | Consulta externa de CNPJ |
 
 A conexão com o banco utiliza as variáveis de ambiente `DB_URL`,
 `DB_USER` e `DB_PASSWORD`. Credenciais não devem ser versionadas.
@@ -141,8 +140,7 @@ cadastral não altera CNPJ nem estado de ativação.
 
 **Estado:** Entity, DTOs, Mapper, Repository, Service e Controller
 implementados. Cadastro, listagem, busca por ID, busca por CNPJ e
-atualização foram testados no Postman. A desativação está implementada,
-mas seu teste ainda está pendente.
+atualização e desativação foram testados no Postman.
 
 ### 4.2 Produto
 
@@ -182,7 +180,7 @@ ativos antes de associá-los.
 **Estado:** Entity, DTOs, Mapper, Repository, Service, Controller e
 rotas implementados e compilados (branch `feature/fornecedor-produto`).
 Tabela MySQL criada com chaves estrangeiras e restrição única.
-Testes no Postman pendentes.
+Testado no Postman.
 
 ### 4.4 Compra
 
@@ -345,7 +343,7 @@ associação:
 ```
 
 **ResponseDTO:** representa os dados devolvidos, sem expor toda a
-entidade. Exemplo previsto:
+entidade. Exemplo:
 
 ```json
 {
@@ -553,10 +551,13 @@ executorTransacional.executar(new ConfirmarRecebimentoCommand(compraId));
 
 ## 8. Integração externa --- BrasilAPI
 
-A BrasilAPI será utilizada para consulta de dados cadastrais de CNPJ,
+A BrasilAPI é utilizada para consulta de dados cadastrais de CNPJ,
 atendendo ao requisito funcional RF02.
 
-### Fluxo previsto
+Endpoint externo: `GET https://brasilapi.com.br/api/cnpj/v1/{cnpj}`
+(gratuito, sem chave de acesso).
+
+### Fluxo
 
 1.  Cliente envia um CNPJ para consulta.
 2.  Aplicação valida o formato básico.
@@ -569,7 +570,7 @@ atendendo ao requisito funcional RF02.
 A consulta externa não deve cadastrar ou atualizar automaticamente o
 fornecedor sem uma operação explícita do usuário.
 
-### Organização sugerida
+### Organização
 
 ```text
 infrastructure/
@@ -587,77 +588,53 @@ infrastructure/
 A indisponibilidade da BrasilAPI não deve expor detalhes internos nem
 impedir necessariamente o cadastro manual conforme as regras locais.
 
-**Estado:** implementado e testado no Postman através da rota `GET /api/cnpj/{cnpj}` na branch `feature/brasilapi`.
-Cliente HTTP, endpoint exato, mapeamento de resposta e teste isolado ainda precisam ser implementados
-e confirmados na documentação oficial da BrasilAPI. Não assumir campos
-ou contrato externo antes dessa verificação.
+**Estado:** implementado e testado (pasta `06 - Consulta CNPJ` da coleção
+Postman). Rota própria: `GET /api/cnpj/{cnpj}`, que aceita o CNPJ com ou
+sem pontuação e devolve os dados já nos nomes de campo do Fornecedor.
+
+| Situação | Status |
+|---|---|
+| CNPJ encontrado | `200 OK` |
+| Formato inválido ou rejeitado pela BrasilAPI | `400 Bad Request` |
+| CNPJ não encontrado | `404 Not Found` |
+| BrasilAPI fora do ar, timeout (10 s) ou erro 5xx | `503 Service Unavailable` |
 
 ## 9. API HTTP
 
-Rotas existentes e previstas. Rotas planejadas não devem ser
-consideradas implementadas até estarem no FrontController e testadas.
+Todas as rotas abaixo estão implementadas e cobertas pela coleção do
+Postman (`postman/EstoqueCerto.postman_collection.json`).
 
 ### 9.1 Status
 
-Método Rota Descrição Estado
-
----
-
-GET `/api/status` Verifica disponibilidade da API Implementada
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/status` | Verifica disponibilidade da API |
 
 ### 9.2 Produtos
 
----
-
-Método Rota Descrição Estado
-
----
-
-POST `/api/produtos` Cadastra produto Código existente
-
-GET `/api/produtos` Lista produtos Código existente
-
-GET `/api/produtos/codigo/{codigo}` Busca por código Código existente
-
-GET `/api/produtos/{id}` Busca por ID Código existente
-
-PUT `/api/produtos/{id}` Atualiza produto Código existente
-
-DELETE `/api/produtos/{id}` Desativa produto Código existente
-
----
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/produtos` | Cadastra produto (código `PROD-0001` gerado automaticamente) |
+| GET | `/api/produtos` | Lista produtos |
+| GET | `/api/produtos/codigo/{codigo}` | Busca por código |
+| GET | `/api/produtos/{id}` | Busca por ID |
+| PUT | `/api/produtos/{id}` | Atualiza produto (não altera estoque) |
+| DELETE | `/api/produtos/{id}` | Desativa produto |
 
 ### 9.3 Fornecedores
 
----
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/fornecedores` | Cadastra fornecedor |
+| GET | `/api/fornecedores` | Lista fornecedores |
+| GET | `/api/fornecedores/cnpj/{cnpj}` | Busca por CNPJ |
+| GET | `/api/fornecedores/{id}` | Busca por ID |
+| PUT | `/api/fornecedores/{id}` | Atualiza fornecedor |
+| DELETE | `/api/fornecedores/{id}` | Desativa fornecedor |
 
-Método Rota Descrição Estado
+A rota por CNPJ é verificada antes da rota genérica por ID.
 
----
-
-POST `/api/fornecedores` Cadastra Implementada e
-fornecedor testada
-
-GET `/api/fornecedores` Lista Implementada e
-fornecedores testada
-
-GET `/api/fornecedores/cnpj/{cnpj}` Busca por CNPJ Implementada e
-testada
-
-GET `/api/fornecedores/{id}` Busca por ID Implementada e
-testada
-
-PUT `/api/fornecedores/{id}` Atualiza Implementada e
-fornecedor testada
-
-DELETE `/api/fornecedores/{id}` Desativa Código existente;
-fornecedor teste pendente
-
----
-
-A rota por CNPJ deve ser verificada antes da rota genérica por ID.
-
-### 9.4 FornecedorProduto --- implementadas, testes pendentes
+### 9.4 FornecedorProduto --- implementadas e testadas
 
 ---
 
@@ -876,7 +853,7 @@ src/main/java/br/com/estoquecerto/
 │   ├── http/
 │   │   └── ServidorHttp.java
 │   └── external/
-│       └── BrasilApiClient.java               (previsto)
+│       └── BrasilApiClient.java
 ├── exception/
 │   ├── ConflitoException.java
 │   └── RecursoNaoEncontradoException.java
@@ -905,14 +882,24 @@ Resultado esperado: `BUILD SUCCESS`.
 
 ### Testes de API
 
-No Postman, verificar método, URL, JSON, código HTTP, corpo da resposta
-e persistência real no MySQL. Também testar dados inválidos e recursos
-inexistentes.
+A coleção `postman/EstoqueCerto.postman_collection.json` tem testes
+automatizados para todas as rotas: casos de sucesso, dados inválidos
+(400), recursos inexistentes (404), conflitos de estado (409) e
+indisponibilidade externa (503). Ela cria os próprios dados, então pode
+ser executada várias vezes no mesmo banco.
+
+Execução pelo Postman: Import → Run collection. Execução pelo terminal,
+sem limite de uso (requer Node.js):
+
+```powershell
+npx newman run postman/EstoqueCerto.postman_collection.json
+```
 
 ### BrasilAPI
 
-Criar teste isolado demonstrando envio do CNPJ, recebimento da resposta,
-interpretação dos dados e tratamento de falhas.
+Coberta pela pasta `06 - Consulta CNPJ`: consulta válida, CNPJ com
+pontuação, formato inválido e CNPJ inexistente. Esses testes dependem
+de acesso à internet.
 
 ### Transações
 
@@ -935,40 +922,22 @@ Fluxo de trabalho acordado:
 Não desenvolver diretamente na `master` nem realizar merge sem revisão
 combinada pela equipe.
 
-## 14. Estado atual e próximos passos
+## 14. Estado final
 
-### Concluído ou existente
+Todos os módulos do escopo foram implementados, revisados por outro
+integrante via Pull Request e testados.
 
-- Estrutura Maven e servidor HTTP.
-- Front Controller.
-- Conexão JDBC com MySQL.
-- Módulo de fornecedores com operações principais testadas.
-- Código do módulo de produtos.
-- Ajuste da tabela `produtos` para `preco_venda` e `ativo`.
-- Módulo `FornecedorProduto` completo (Service, Controller e rotas),
-  compilado; testes no Postman pendentes.
-- Tabela `fornecedor_produto` com FKs e restrição de unicidade.
-- Módulo de Movimentação (Factory Method, repositório, atualização
-  atômica de estoque, ajuste manual e histórico), compilado e testado
-  no Postman.
-- Módulo de Compra (cadastro com itens, consulta, cancelamento e
-  recebimento com entrada no estoque), compilado e testado no Postman.
-- Módulo de Devolução (cadastro com itens, consulta, cancelamento e
-  conclusão com saída do estoque), compilado e testado no Postman.
+| Módulo | Padrões envolvidos |
+|---|---|
+| Fornecedor | Front Controller, DTO, Repository |
+| Produto (código automático) | Front Controller, DTO, Repository |
+| FornecedorProduto | Front Controller, DTO, Repository |
+| Movimentação de estoque e ajuste | Factory Method, Command |
+| Compra (cadastro, cancelamento, recebimento) | Command, Factory Method |
+| Devolução (cadastro, cancelamento, conclusão) | Command, Factory Method |
+| Consulta de CNPJ | Integração externa (BrasilAPI) |
 
-### Próximas atividades
-
-1.  Testar associações no Postman e abrir o PR de `FornecedorProduto`.
-2.  ~~Corrigir os códigos HTTP~~ (branch `fix/status-http`).
-3.  Validar CRUD de Produto com MySQL.
-4.  Versionar o script do banco em `docs/schema.sql`.
-5.  ~~Implementar `ExecutorTransacional` e a interface `Command`~~.
-6.  ~~Implementar Compra e ItemCompra~~ (branch `feature/compra`).
-7.  ~~Implementar MovimentacaoEstoque e o Factory Method~~ (branch `feature/movimentacao`, testado no Postman).
-8.  ~~Implementar `ConfirmarRecebimentoCommand`~~ (branch `feature/compra`).
-9.  ~~Implementar Devolucao, ItemDevolucao e `ConcluirDevolucaoCommand`~~ (branch `feature/devolucao`).
-10. Implementar e testar integração BrasilAPI.
-11. Completar coleção Postman e README final.
+Coleção Postman: 147 requisições e 263 testes automatizados.
 
 ---
 
